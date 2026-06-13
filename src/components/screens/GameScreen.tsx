@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { CricketPlayerState, DartThrow } from "@/interfaces";
 import type { DartsGame } from "@/hooks/useDartsGame";
 import { getMode } from "@/data/modes";
@@ -8,6 +9,7 @@ import { usePersistedState } from "@/hooks/usePersistedState";
 import { PlayerScoreCard } from "@/components/ui/PlayerScoreCard";
 import { DartPad } from "@/components/ui/DartPad";
 import { DartBoard } from "@/components/ui/DartBoard";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import styles from "./GameScreen.module.css";
 
 interface GameScreenProps {
@@ -43,6 +45,7 @@ export function GameScreen({ game }: GameScreenProps) {
     "board",
   );
   const inputDisabled = state.turnOver || state.winnerId !== null;
+  const [confirmQuit, setConfirmQuit] = useState(false);
 
   const cricketOverlay =
     isCricket && currentPlayer
@@ -58,7 +61,12 @@ export function GameScreen({ game }: GameScreenProps) {
   return (
     <div className={styles.screen}>
       <header className={styles.top}>
-        <button type="button" className={styles.icon} onClick={game.goHome}>
+        <button
+          type="button"
+          className={styles.icon}
+          onClick={() => setConfirmQuit(true)}
+          aria-label="Quitter la partie"
+        >
           ⌂
         </button>
         <div className={styles.modeInfo}>
@@ -185,6 +193,17 @@ export function GameScreen({ game }: GameScreenProps) {
             </button>
           </div>
         </div>
+      )}
+
+      {confirmQuit && (
+        <ConfirmDialog
+          title="Quitter la partie ?"
+          message="La partie en cours sera perdue. Cette action est définitive."
+          confirmLabel="Quitter"
+          cancelLabel="Continuer"
+          onConfirm={game.goHome}
+          onCancel={() => setConfirmQuit(false)}
+        />
       )}
     </div>
   );
