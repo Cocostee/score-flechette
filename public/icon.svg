@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="96" fill="#141109"/>
+  <g transform="translate(256 256)">
+    <circle r="190" fill="#0d0b06" stroke="#c9a44a" stroke-width="10"/>
+    <circle r="188" fill="none" stroke="#2a2315" stroke-width="44"/>
+    <circle r="150" fill="none" stroke="#d8352a" stroke-width="22"/>
+    <circle r="150" fill="none" stroke="#2aa15e" stroke-width="22" stroke-dasharray="78 78" transform="rotate(40)"/>
+    <circle r="92" fill="none" stroke="#2aa15e" stroke-width="20"/>
+    <circle r="92" fill="none" stroke="#d8352a" stroke-width="20" stroke-dasharray="48 48" transform="rotate(40)"/>
+    <g stroke="#3a3320" stroke-width="6">
+      <line x1="0" y1="-190" x2="0" y2="190"/>
+      <line x1="-190" y1="0" x2="190" y2="0"/>
+      <line x1="-134" y1="-134" x2="134" y2="134"/>
+      <line x1="134" y1="-134" x2="-134" y2="134"/>
+    </g>
+    <circle r="34" fill="#2aa15e"/>
+    <circle r="16" fill="#d8352a"/>
+    <g transform="rotate(34)">
+      <line x1="150" y1="0" x2="300" y2="-46" stroke="#c9a44a" stroke-width="8" stroke-linecap="round"/>
+      <polygon points="150,-7 150,7 128,0" fill="#f4ecd6"/>
+      <polygon points="300,-46 286,-58 300,-66 314,-54" fill="#d8352a"/>
+    </g>
+  </g>
+</svg>

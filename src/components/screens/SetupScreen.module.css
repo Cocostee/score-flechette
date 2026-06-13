@@ -1,0 +1,235 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: clamp(18px, 4vh, 32px) 0 40px;
+  animation: rise 0.4s ease both;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.back {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 9px 16px;
+  color: var(--chalk-dim);
+  font-size: 0.9rem;
+  transition: all 0.15s ease;
+}
+
+.back:hover {
+  color: var(--chalk);
+  border-color: var(--gold);
+}
+
+.modeTag {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+}
+
+.modeKicker {
+  font-size: 0.66rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.modeName {
+  font-family: var(--font-display), serif;
+  font-size: 1.5rem;
+  color: var(--chalk);
+}
+
+.block {
+  background: linear-gradient(180deg, var(--surface), var(--bg-deep));
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+
+.blockHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.blockTitle {
+  font-size: 1.6rem;
+  color: var(--chalk);
+  letter-spacing: 0.05em;
+}
+
+.count {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: rgba(201, 164, 74, 0.12);
+  border: 1px solid var(--line);
+  color: var(--gold-bright);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.players {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.playerRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.playerIndex {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--gold);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-deep);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 13px 14px;
+  color: var(--chalk);
+  font-size: 1rem;
+  transition: border-color 0.15s ease;
+}
+
+.input::placeholder {
+  color: var(--chalk-faint);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.remove {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--chalk-dim);
+  font-size: 1.4rem;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.remove:hover:not(:disabled) {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.remove:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.add {
+  margin-top: 14px;
+  width: 100%;
+  padding: 13px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--gold-bright);
+  font-size: 0.95rem;
+  transition: all 0.15s ease;
+}
+
+.add:hover:not(:disabled) {
+  background: rgba(201, 164, 74, 0.08);
+}
+
+.add:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.optionLabel {
+  margin: 18px 0 8px;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--chalk-dim);
+}
+
+.optionLabel:first-of-type {
+  margin-top: 4px;
+}
+
+.segment {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.segBtn {
+  flex: 1;
+  min-width: 72px;
+  padding: 13px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--bg-deep);
+  color: var(--chalk-dim);
+  font-size: 0.96rem;
+  font-weight: 500;
+  transition: all 0.14s ease;
+}
+
+.segBtn:hover {
+  border-color: var(--line-strong);
+  color: var(--chalk);
+}
+
+.segOn {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, var(--gold), #b48f38);
+  color: var(--bg-deep);
+  font-weight: 600;
+}
+
+.launch {
+  padding: 20px;
+  border: none;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, var(--green), var(--green-deep));
+  color: #fff;
+  font-family: var(--font-display), serif;
+  font-size: 1.7rem;
+  letter-spacing: 0.06em;
+  box-shadow:
+    0 12px 30px -12px rgba(42, 161, 94, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition:
+    transform 0.14s ease,
+    filter 0.14s ease;
+}
+
+.launch:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}

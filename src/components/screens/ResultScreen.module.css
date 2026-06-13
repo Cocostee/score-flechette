@@ -1,0 +1,132 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: clamp(28px, 8vh, 64px) 0 40px;
+  animation: rise 0.4s ease both;
+}
+
+.head {
+  text-align: center;
+}
+
+.kicker {
+  margin: 0 0 8px;
+  font-size: 0.74rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.title {
+  font-size: clamp(3.4rem, 16vw, 6rem);
+  color: var(--chalk);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--surface), var(--bg-deep));
+  animation: rise 0.45s ease both;
+}
+
+.row[data-first="true"] {
+  border-color: var(--green);
+  background: linear-gradient(
+    180deg,
+    var(--surface-2),
+    rgba(42, 161, 94, 0.07)
+  );
+  box-shadow: 0 12px 30px -18px rgba(42, 161, 94, 0.6);
+}
+
+.place {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--chalk-dim);
+  font-family: var(--font-display), serif;
+  font-size: 1.4rem;
+}
+
+.row[data-first="true"] .place {
+  background: linear-gradient(180deg, var(--green), var(--green-deep));
+  color: #fff;
+}
+
+.rowName {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--chalk);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rowValue {
+  font-size: 0.86rem;
+  color: var(--chalk-dim);
+  white-space: nowrap;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.replay {
+  padding: 18px;
+  border: none;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+  color: var(--bg-deep);
+  font-family: var(--font-display), serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.05em;
+  transition:
+    transform 0.14s ease,
+    filter 0.14s ease;
+}
+
+.replay:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+}
+
+.home {
+  padding: 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--chalk);
+  font-family: var(--font-display), serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.05em;
+  transition: all 0.14s ease;
+}
+
+.home:hover {
+  border-color: var(--gold);
+  color: var(--gold-bright);
+}
