@@ -89,6 +89,16 @@ export function applyCricketDart(
   return next;
 }
 
+/* Lists the cricket numbers closed by every player, hence dead for scoring. */
+export function deadNumbers(
+  states: Record<string, CricketPlayerState>,
+  players: Player[],
+): number[] {
+  return CRICKET_NUMBERS.filter((num) =>
+    players.every((player) => states[player.id].marks[num] >= 3),
+  );
+}
+
 /* Tells whether the current player has met the cricket victory condition. */
 export function checkCricketWin(
   states: Record<string, CricketPlayerState>,

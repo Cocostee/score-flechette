@@ -1,0 +1,162 @@
+.board {
+  width: 100%;
+  height: auto;
+  display: block;
+  touch-action: manipulation;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.55));
+}
+
+.board[data-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.rim {
+  fill: #0b0906;
+  stroke: var(--gold);
+  stroke-width: 2;
+}
+
+.rimInner {
+  fill: #050403;
+}
+
+.zone {
+  cursor: pointer;
+  stroke: #07060300;
+  stroke-width: 0.6;
+  transition:
+    filter 0.1s ease,
+    opacity 0.18s ease;
+}
+
+.zone[data-base="dark"] {
+  fill: #17130b;
+}
+
+.zone[data-base="light"] {
+  fill: #e7dcc0;
+}
+
+.zone[data-base="red"] {
+  fill: var(--red);
+}
+
+.zone[data-base="green"] {
+  fill: var(--green);
+}
+
+.zones path {
+  stroke: rgba(201, 164, 74, 0.35);
+  stroke-width: 0.5;
+}
+
+.zone:hover {
+  filter: brightness(1.35) saturate(1.1);
+}
+
+.zone[data-base="light"]:hover {
+  filter: brightness(1.08);
+}
+
+.zone[data-state="inactive"] {
+  opacity: 0.22;
+  cursor: pointer;
+}
+
+.zone[data-state="dead"] {
+  opacity: 0.3;
+}
+
+.overlay {
+  pointer-events: none;
+}
+
+.overlayPath {
+  pointer-events: none;
+}
+
+.overlayPath[data-state="closed"] {
+  fill: rgba(42, 161, 94, 0.4);
+  stroke: var(--green);
+  stroke-width: 1.5;
+}
+
+.overlayPath[data-state="dead"] {
+  fill: rgba(10, 8, 5, 0.6);
+  stroke: rgba(120, 110, 88, 0.5);
+  stroke-width: 1;
+}
+
+.overlayMark {
+  text-anchor: middle;
+  dominant-baseline: central;
+  font-family: var(--font-display), serif;
+  font-size: 22px;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: rgba(5, 4, 3, 0.7);
+  stroke-width: 3;
+}
+
+.overlayMark[data-state="closed"] {
+  fill: #d6ffe6;
+}
+
+.overlayMark[data-state="dead"] {
+  fill: #cabfa0;
+}
+
+.bullOuter {
+  fill: var(--green);
+  cursor: pointer;
+  stroke: rgba(201, 164, 74, 0.5);
+  stroke-width: 0.6;
+  transition: filter 0.1s ease;
+}
+
+.bullInner {
+  fill: var(--red);
+  cursor: pointer;
+  stroke: rgba(201, 164, 74, 0.5);
+  stroke-width: 0.6;
+  transition: filter 0.1s ease;
+}
+
+.bullOuter:hover,
+.bullInner:hover {
+  filter: brightness(1.3);
+}
+
+.bullOuter[data-state="closed"] {
+  stroke: var(--gold-bright);
+  stroke-width: 2;
+}
+
+.bullOuter[data-state="dead"] {
+  opacity: 0.4;
+}
+
+.labels {
+  pointer-events: none;
+}
+
+.label {
+  text-anchor: middle;
+  dominant-baseline: central;
+  font-family: var(--font-display), serif;
+  font-size: 27px;
+  fill: var(--chalk);
+}
+
+.label[data-state="inactive"] {
+  fill: var(--chalk-faint);
+}
+
+.label[data-state="closed"] {
+  fill: var(--green);
+}
+
+.label[data-state="dead"] {
+  fill: var(--chalk-faint);
+}

@@ -1,10 +1,13 @@
 "use client";
 
-import type { DartThrow } from "@/interfaces";
+import type { CricketPlayerState, DartThrow } from "@/interfaces";
 import type { DartsGame } from "@/hooks/useDartsGame";
 import { getMode } from "@/data/modes";
+import { deadNumbers } from "@/utils/cricket";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import { PlayerScoreCard } from "@/components/ui/PlayerScoreCard";
 import { DartPad } from "@/components/ui/DartPad";
+import { DartBoard } from "@/components/ui/DartBoard";
 import styles from "./GameScreen.module.css";
 
 interface GameScreenProps {
@@ -35,6 +38,22 @@ export function GameScreen({ game }: GameScreenProps) {
   const isCricket = state.mode !== "x01";
   const turnPoints = state.darts.reduce((sum, dart) => sum + dart.points, 0);
   const slots = [0, 1, 2];
+  const [inputMode, setInputMode] = usePersistedState<"board" | "pad">(
+    "oche:input",
+    "board",
+  );
+  const inputDisabled = state.turnOver || state.winnerId !== null;
+
+  const cricketOverlay =
+    isCricket && currentPlayer
+      ? {
+          marks: (state.states[currentPlayer.id] as CricketPlayerState).marks,
+          dead: deadNumbers(
+            state.states as Record<string, CricketPlayerState>,
+            state.players,
+          ),
+        }
+      : undefined;
 
   return (
     <div className={styles.screen}>
@@ -107,11 +126,38 @@ export function GameScreen({ game }: GameScreenProps) {
         {state.bust && <div className={styles.bust}>Bust — tour annulé</div>}
       </section>
 
-      <DartPad
-        onThrow={game.registerDart}
-        disabled={state.turnOver || state.winnerId !== null}
-        liveNumbers={isCricket ? CRICKET_LIVE : undefined}
-      />
+      <div className={styles.switch}>
+        <button
+          type="button"
+          className={styles.switchBtn}
+          data-on={inputMode === "board" ? "true" : "false"}
+          onClick={() => setInputMode("board")}
+        >
+          🎯 Cible
+        </button>
+        <button
+          type="button"
+          className={styles.switchBtn}
+          data-on={inputMode === "pad" ? "true" : "false"}
+          onClick={() => setInputMode("pad")}
+        >
+          # Chiffres
+        </button>
+      </div>
+
+      {inputMode === "board" ? (
+        <DartBoard
+          onThrow={game.registerDart}
+          disabled={inputDisabled}
+          cricket={cricketOverlay}
+        />
+      ) : (
+        <DartPad
+          onThrow={game.registerDart}
+          disabled={inputDisabled}
+          liveNumbers={isCricket ? CRICKET_LIVE : undefined}
+        />
+      )}
 
       <button
         type="button"
