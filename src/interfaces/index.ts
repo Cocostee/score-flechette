@@ -79,3 +79,8 @@ export interface ModeInfo {
   tagline: string;
   rules: string[];
 }
+
+export interface TrackedPlayer {
+  id: string;
+  name: string;
+}

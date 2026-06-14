@@ -5,6 +5,12 @@
   padding: clamp(20px, 6vh, 56px) 0;
 }
 
+.topBar {
+  display: flex;
+  justify-content: flex-end;
+  animation: rise 0.4s ease both;
+}
+
 .hero {
   animation: rise 0.5s ease both;
 }

@@ -5,6 +5,7 @@ import type { GameMode } from "@/interfaces";
 import type { DartsGame } from "@/hooks/useDartsGame";
 import { MODES, getMode } from "@/data/modes";
 import { RulesModal } from "@/components/ui/RulesModal";
+import { AccountButton } from "@/components/account/AccountButton";
 import styles from "./HomeScreen.module.css";
 
 interface HomeScreenProps {
@@ -18,6 +19,10 @@ export function HomeScreen({ game }: HomeScreenProps) {
 
   return (
     <div className={styles.screen}>
+      <div className={styles.topBar}>
+        <AccountButton />
+      </div>
+
       <header className={styles.hero}>
         <p className={styles.kicker}>Compteur de fléchettes · hors-ligne</p>
         <h1 className={styles.title}>

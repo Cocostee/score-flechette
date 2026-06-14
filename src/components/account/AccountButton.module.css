@@ -1,0 +1,251 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--chalk-dim);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.chip:hover {
+  border-color: var(--gold);
+  color: var(--chalk);
+}
+
+.chip[data-in="true"] {
+  padding: 5px;
+  border-color: var(--gold);
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--gold), #b48f38);
+  color: var(--bg-deep);
+  font-family: var(--font-display), serif;
+  font-size: 1.1rem;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(8, 6, 3, 0.78);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  animation: rise 0.16s ease both;
+}
+
+.panel {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 26px 22px 22px;
+  animation: popIn 0.2s ease both;
+}
+
+.close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--chalk-dim);
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.close:hover {
+  color: var(--chalk);
+  border-color: var(--gold);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.title {
+  font-size: 1.9rem;
+  color: var(--chalk);
+  margin-bottom: 2px;
+}
+
+.email {
+  margin: -6px 0 4px;
+  font-size: 0.84rem;
+  color: var(--chalk-dim);
+}
+
+.input {
+  background: var(--bg-deep);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 13px 14px;
+  color: var(--chalk);
+  font-size: 1rem;
+}
+
+.input::placeholder {
+  color: var(--chalk-faint);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.primary {
+  margin-top: 4px;
+  padding: 15px;
+  border: none;
+  border-radius: 11px;
+  background: linear-gradient(180deg, var(--green), var(--green-deep));
+  color: #fff;
+  font-family: var(--font-display), serif;
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+  transition: filter 0.14s ease;
+}
+
+.primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.switch {
+  background: transparent;
+  border: none;
+  color: var(--gold-bright);
+  font-size: 0.88rem;
+  padding: 4px;
+}
+
+.switch:hover {
+  text-decoration: underline;
+}
+
+.players {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.empty {
+  font-size: 0.88rem;
+  color: var(--chalk-faint);
+  line-height: 1.4;
+}
+
+.playerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--bg-deep);
+}
+
+.playerName {
+  font-size: 1rem;
+  color: var(--chalk);
+}
+
+.remove {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--chalk-dim);
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.remove:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.addRow {
+  display: flex;
+  gap: 8px;
+}
+
+.addRow .input {
+  flex: 1;
+}
+
+.add {
+  flex-shrink: 0;
+  width: 48px;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  color: var(--gold-bright);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.add:hover:not(:disabled) {
+  border-color: var(--gold);
+}
+
+.add:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.signout {
+  margin-top: 6px;
+  padding: 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: 11px;
+  background: transparent;
+  color: var(--chalk);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.signout:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.message {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: rgba(201, 164, 74, 0.1);
+  border: 1px solid var(--line);
+  color: var(--chalk-dim);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
