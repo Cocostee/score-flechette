@@ -66,8 +66,24 @@ export function DartBoard({ onThrow, disabled, cricket }: DartBoardProps) {
       role="group"
       aria-label="Cible de fléchettes"
     >
-      <circle cx={CX} cy={CY} r={R + 28} className={styles.rim} />
-      <circle cx={CX} cy={CY} r={R + 16} className={styles.rimInner} />
+      <circle
+        cx={CX}
+        cy={CY}
+        r={R + 28}
+        className={styles.rim}
+        onClick={() => onThrow(0, 1)}
+      >
+        <title>À côté · 0</title>
+      </circle>
+      <circle
+        cx={CX}
+        cy={CY}
+        r={R + 16}
+        className={styles.rimInner}
+        onClick={() => onThrow(0, 1)}
+      >
+        <title>À côté · 0</title>
+      </circle>
 
       <g className={styles.zones}>
         {zones.map((zone) => {

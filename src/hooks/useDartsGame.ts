@@ -24,7 +24,8 @@ type Action =
   | { type: "OPEN_SETUP"; mode: GameMode }
   | { type: "START_GAME"; config: GameConfig }
   | { type: "REGISTER_DART"; dart: DartThrow }
-  | { type: "UNDO_DART" }
+  | { type: "UNDO" }
+  | { type: "REMOVE_FROM"; index: number }
   | { type: "NEXT_TURN" }
   | { type: "FINISH" }
   | { type: "NEW_GAME" }
@@ -43,7 +44,24 @@ const DEFAULT_STATE: GameState = {
   turnOver: false,
   bust: false,
   winnerId: null,
+  past: [],
 };
+
+const HISTORY_CAP = 80;
+
+/* Returns a state copy with its undo history stripped, for stacking. */
+function stripPast(state: GameState): GameState {
+  return { ...state, past: [] };
+}
+
+/* Stacks the previous state onto the next state's bounded undo history. */
+function withHistory(previous: GameState, next: GameState): GameState {
+  if (next === previous) {
+    return next;
+  }
+  const past = [...previous.past, stripPast(previous)].slice(-HISTORY_CAP);
+  return { ...next, past };
+}
 
 /* Deep-clones a single player state so reducer updates stay immutable. */
 function clonePlayerState(state: PlayerGameState): PlayerGameState {
@@ -180,17 +198,30 @@ function reducer(state: GameState, action: Action): GameState {
         turnOver: false,
         bust: false,
         winnerId: null,
+        past: [],
       };
     }
 
     case "REGISTER_DART":
-      return reduceRegister(state, action.dart);
+      return withHistory(state, reduceRegister(state, action.dart));
 
-    case "UNDO_DART": {
-      if (state.darts.length === 0 || !state.turnSnapshot) {
+    case "UNDO": {
+      if (state.past.length === 0) {
         return state;
       }
-      const darts = state.darts.slice(0, -1);
+      const previous = state.past[state.past.length - 1];
+      return { ...previous, past: state.past.slice(0, -1) };
+    }
+
+    case "REMOVE_FROM": {
+      if (
+        !state.turnSnapshot ||
+        action.index < 0 ||
+        action.index >= state.darts.length
+      ) {
+        return state;
+      }
+      const darts = state.darts.slice(0, action.index);
       const currentId = state.players[state.currentIndex].id;
       const states = replayTurn(
         state.turnSnapshot,
@@ -200,14 +231,14 @@ function reducer(state: GameState, action: Action): GameState {
         state.rules,
         darts,
       );
-      return {
+      return withHistory(state, {
         ...state,
         states,
         darts,
         turnOver: false,
         bust: false,
         winnerId: null,
-      };
+      });
     }
 
     case "NEXT_TURN": {
@@ -215,14 +246,14 @@ function reducer(state: GameState, action: Action): GameState {
         return state;
       }
       const currentIndex = (state.currentIndex + 1) % state.players.length;
-      return {
+      return withHistory(state, {
         ...state,
         currentIndex,
         darts: [],
         turnOver: false,
         bust: false,
         turnSnapshot: cloneStates(state.states),
-      };
+      });
     }
 
     case "FINISH":
@@ -245,6 +276,7 @@ function reducer(state: GameState, action: Action): GameState {
         turnOver: false,
         bust: false,
         winnerId: null,
+        past: [],
       };
     }
 
@@ -252,7 +284,7 @@ function reducer(state: GameState, action: Action): GameState {
       return { ...DEFAULT_STATE };
 
     case "HYDRATE":
-      return action.state;
+      return { ...action.state, past: action.state.past ?? [] };
 
     default:
       return state;
@@ -266,7 +298,8 @@ export interface DartsGame {
   openSetup: (mode: GameMode) => void;
   startGame: (config: GameConfig) => void;
   registerDart: (segment: number, multiplier: Multiplier) => void;
-  undoDart: () => void;
+  undo: () => void;
+  removeDart: (index: number) => void;
   nextTurn: () => void;
   finishGame: () => void;
   newGame: () => void;
@@ -294,7 +327,7 @@ export function useDartsGame(): DartsGame {
       clearGame();
       return;
     }
-    saveGame(state);
+    saveGame(stripPast(state));
   }, [state]);
 
   return useMemo<DartsGame>(() => {
@@ -320,7 +353,8 @@ export function useDartsGame(): DartsGame {
         };
         dispatch({ type: "REGISTER_DART", dart });
       },
-      undoDart: () => dispatch({ type: "UNDO_DART" }),
+      undo: () => dispatch({ type: "UNDO" }),
+      removeDart: (index) => dispatch({ type: "REMOVE_FROM", index }),
       nextTurn: () => dispatch({ type: "NEXT_TURN" }),
       finishGame: () => dispatch({ type: "FINISH" }),
       newGame: () => dispatch({ type: "NEW_GAME" }),

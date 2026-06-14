@@ -15,10 +15,12 @@
   fill: #0b0906;
   stroke: var(--gold);
   stroke-width: 2;
+  cursor: pointer;
 }
 
 .rimInner {
   fill: #050403;
+  cursor: pointer;
 }
 
 .zone {

@@ -1,10 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import type { CricketPlayerState, DartThrow } from "@/interfaces";
+import type {
+  CricketPlayerState,
+  DartThrow,
+  X01PlayerState,
+} from "@/interfaces";
 import type { DartsGame } from "@/hooks/useDartsGame";
 import { getMode } from "@/data/modes";
 import { deadNumbers } from "@/utils/cricket";
+import { suggestCheckout } from "@/utils/checkout";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { PlayerScoreCard } from "@/components/ui/PlayerScoreCard";
 import { DartPad } from "@/components/ui/DartPad";
@@ -33,13 +38,41 @@ function dartLabel(dart: DartThrow): string {
   return `${prefix}${dart.segment}`;
 }
 
+/* Returns the number of cricket marks a single dart is worth. */
+function marksOf(dart: DartThrow): number {
+  if (dart.segment === 50) {
+    return 2;
+  }
+  if (dart.segment === 25) {
+    return 1;
+  }
+  if (dart.segment >= 15 && dart.segment <= 20) {
+    return dart.multiplier;
+  }
+  return 0;
+}
+
 /* Turn-by-turn play screen: scoreboard, dart input and turn controls. */
 export function GameScreen({ game }: GameScreenProps) {
   const { state, currentPlayer } = game;
   const info = getMode(state.mode);
   const isCricket = state.mode !== "x01";
   const turnPoints = state.darts.reduce((sum, dart) => sum + dart.points, 0);
+  const turnMarks = state.darts.reduce((sum, dart) => sum + marksOf(dart), 0);
   const slots = [0, 1, 2];
+
+  const activeX01 =
+    state.mode === "x01" && currentPlayer
+      ? (state.states[currentPlayer.id] as X01PlayerState)
+      : null;
+  const checkout =
+    activeX01 && activeX01.opened && !state.turnOver && !state.winnerId
+      ? suggestCheckout(
+          activeX01.score,
+          3 - state.darts.length,
+          state.rules.outOption,
+        )
+      : null;
   const [inputMode, setInputMode] = usePersistedState<"board" | "pad">(
     "oche:input",
     "board",
@@ -80,9 +113,9 @@ export function GameScreen({ game }: GameScreenProps) {
         <button
           type="button"
           className={styles.icon}
-          onClick={game.undoDart}
-          disabled={state.darts.length === 0}
-          aria-label="Annuler la dernière fléchette"
+          onClick={game.undo}
+          disabled={state.past.length === 0}
+          aria-label="Annuler la dernière action"
         >
           ↺
         </button>
@@ -109,28 +142,44 @@ export function GameScreen({ game }: GameScreenProps) {
             {currentPlayer ? currentPlayer.name : ""}
           </span>
           <span className={styles.turnTotal}>
-            Tour&nbsp;: <strong>{turnPoints}</strong>
+            Tour&nbsp;:{" "}
+            <strong>
+              {isCricket ? `${turnMarks} marq.` : turnPoints}
+            </strong>
           </span>
         </div>
         <div className={styles.slots}>
           {slots.map((slot) => {
             const dart = state.darts[slot];
+            const sub = dart
+              ? isCricket
+                ? `${marksOf(dart)} marq.`
+                : `${dart.points} pts`
+              : `Fléch. ${slot + 1}`;
             return (
-              <div
+              <button
                 key={slot}
+                type="button"
                 className={styles.slot}
                 data-filled={dart ? "true" : "false"}
+                disabled={!dart}
+                onClick={() => game.removeDart(slot)}
+                aria-label={dart ? `Retirer la fléchette ${slot + 1}` : undefined}
               >
                 <span className={styles.slotLabel}>
                   {dart ? dartLabel(dart) : "—"}
                 </span>
-                <span className={styles.slotPts}>
-                  {dart ? `${dart.points} pts` : `Fléch. ${slot + 1}`}
-                </span>
-              </div>
+                <span className={styles.slotPts}>{sub}</span>
+              </button>
             );
           })}
         </div>
+        {checkout && (
+          <div className={styles.checkout}>
+            <span className={styles.checkoutLabel}>Sortie</span>
+            <span className={styles.checkoutCombo}>{checkout.join(" · ")}</span>
+          </div>
+        )}
         {state.bust && <div className={styles.bust}>Bust — tour annulé</div>}
       </section>
 
@@ -154,11 +203,21 @@ export function GameScreen({ game }: GameScreenProps) {
       </div>
 
       {inputMode === "board" ? (
-        <DartBoard
-          onThrow={game.registerDart}
-          disabled={inputDisabled}
-          cricket={cricketOverlay}
-        />
+        <>
+          <DartBoard
+            onThrow={game.registerDart}
+            disabled={inputDisabled}
+            cricket={cricketOverlay}
+          />
+          <button
+            type="button"
+            className={styles.miss}
+            onClick={() => game.registerDart(0, 1)}
+            disabled={inputDisabled}
+          >
+            ✕ À côté
+          </button>
+        </>
       ) : (
         <DartPad
           onThrow={game.registerDart}

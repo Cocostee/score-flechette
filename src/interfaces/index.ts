@@ -51,6 +51,7 @@ export interface GameState {
   turnOver: boolean;
   bust: boolean;
   winnerId: string | null;
+  past: GameState[];
 }
 
 export interface GameConfig {

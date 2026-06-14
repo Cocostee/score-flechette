@@ -115,7 +115,13 @@
   border-radius: 10px;
   border: 1px dashed var(--line);
   background: var(--bg-deep);
+  color: inherit;
+  font: inherit;
   transition: all 0.18s ease;
+}
+
+.slot:disabled {
+  cursor: default;
 }
 
 .slot[data-filled="true"] {
@@ -123,6 +129,16 @@
   border-color: var(--gold);
   background: rgba(201, 164, 74, 0.08);
   animation: popIn 0.2s ease both;
+  cursor: pointer;
+}
+
+.slot[data-filled="true"]:hover {
+  border-color: var(--red);
+  background: rgba(216, 53, 42, 0.12);
+}
+
+.slot[data-filled="true"]:hover .slotLabel {
+  color: var(--red);
 }
 
 .slotLabel {
@@ -149,6 +165,55 @@
   color: #fff;
   background: linear-gradient(180deg, var(--red), var(--red-deep));
   animation: flashRed 0.5s ease;
+}
+
+.checkout {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 9px;
+  border-radius: 10px;
+  border: 1px solid var(--green);
+  background: rgba(42, 161, 94, 0.1);
+}
+
+.checkoutLabel {
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+.checkoutCombo {
+  font-family: var(--font-display), serif;
+  font-size: 1.35rem;
+  letter-spacing: 0.05em;
+  color: var(--chalk);
+}
+
+.miss {
+  margin-top: -2px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-deep);
+  color: var(--chalk-dim);
+  font-size: 0.96rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition: all 0.15s ease;
+}
+
+.miss:hover:not(:disabled) {
+  border-color: var(--red);
+  color: var(--chalk);
+}
+
+.miss:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .switch {
