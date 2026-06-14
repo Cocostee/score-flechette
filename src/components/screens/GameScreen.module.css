@@ -83,9 +83,20 @@
 }
 
 .turnPlayer {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
   font-size: 1.05rem;
   font-weight: 600;
   color: var(--chalk);
+}
+
+.turnRound {
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
 }
 
 .turnTotal {

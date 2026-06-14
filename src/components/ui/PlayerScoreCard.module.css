@@ -43,6 +43,27 @@
   text-overflow: ellipsis;
 }
 
+.rank {
+  flex-shrink: 0;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--chalk-dim);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.rank[data-lead="true"] {
+  background: linear-gradient(180deg, var(--gold), #b48f38);
+  border-color: var(--gold);
+  color: var(--bg-deep);
+}
+
 .legs {
   flex-shrink: 0;
   font-size: 0.78rem;

@@ -47,6 +47,7 @@ const DEFAULT_STATE: GameState = {
   turnOver: false,
   bust: false,
   winnerId: null,
+  round: 1,
   stats: {},
   legsTarget: 1,
   legsWon: {},
@@ -60,7 +61,7 @@ const HISTORY_CAP = 80;
 function buildStats(players: Player[]): Record<string, PlayerStats> {
   const stats: Record<string, PlayerStats> = {};
   for (const player of players) {
-    stats[player.id] = { darts: 0, bestVisit: 0, marks: 0 };
+    stats[player.id] = { darts: 0, bestVisit: 0, lastVisit: 0, marks: 0 };
   }
   return stats;
 }
@@ -158,6 +159,7 @@ function reduceRegister(state: GameState, dart: DartThrow): GameState {
   const baseStats: PlayerStats = {
     darts: prior.darts + 1,
     bestVisit: prior.bestVisit,
+    lastVisit: prior.lastVisit,
     marks: prior.marks + dartMarks(dart),
   };
 
@@ -239,6 +241,7 @@ function reducer(state: GameState, action: Action): GameState {
         turnOver: false,
         bust: false,
         winnerId: null,
+        round: 1,
         stats: buildStats(action.config.players),
         legsTarget: action.config.legsTarget,
         legsWon: buildLegs(action.config.players),
@@ -302,12 +305,16 @@ function reducer(state: GameState, action: Action): GameState {
         [endingId]: {
           ...ending,
           bestVisit: Math.max(ending.bestVisit, visit),
+          lastVisit: visit,
         },
       };
       const currentIndex = (state.currentIndex + 1) % state.players.length;
+      const round =
+        currentIndex === state.startIndex ? state.round + 1 : state.round;
       return withHistory(state, {
         ...state,
         currentIndex,
+        round,
         darts: [],
         turnOver: false,
         bust: false,
@@ -338,6 +345,7 @@ function reducer(state: GameState, action: Action): GameState {
         turnOver: false,
         bust: false,
         winnerId: null,
+        round: 1,
         stats: buildStats(state.players),
         past: [],
       };
@@ -361,6 +369,7 @@ function reducer(state: GameState, action: Action): GameState {
         turnOver: false,
         bust: false,
         winnerId: null,
+        round: 1,
         stats: buildStats(state.players),
         legsWon: buildLegs(state.players),
         startIndex: 0,
@@ -376,6 +385,7 @@ function reducer(state: GameState, action: Action): GameState {
       return {
         ...saved,
         past: saved.past ?? [],
+        round: saved.round ?? 1,
         stats: saved.stats ?? buildStats(saved.players),
         legsTarget: saved.legsTarget ?? 1,
         legsWon: saved.legsWon ?? buildLegs(saved.players),

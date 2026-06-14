@@ -42,6 +42,7 @@ export type PlayerGameState = X01PlayerState | CricketPlayerState;
 export interface PlayerStats {
   darts: number;
   bestVisit: number;
+  lastVisit: number;
   marks: number;
 }
 
@@ -57,6 +58,7 @@ export interface GameState {
   turnOver: boolean;
   bust: boolean;
   winnerId: string | null;
+  round: number;
   stats: Record<string, PlayerStats>;
   legsTarget: number;
   legsWon: Record<string, number>;

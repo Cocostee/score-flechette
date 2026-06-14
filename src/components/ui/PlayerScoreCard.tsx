@@ -11,9 +11,13 @@ interface PlayerScoreCardProps {
   legsWon: number;
   showLegs: boolean;
   startScore: number;
+  rank: number;
+  showRank: boolean;
   isCurrent: boolean;
   isWinner: boolean;
 }
+
+const RANK_LABEL = ["", "1ᵉʳ", "2ᵉ", "3ᵉ", "4ᵉ", "5ᵉ", "6ᵉ"];
 
 /* Formats the headline stat (3-dart average or marks per round). */
 function formatStat(
@@ -49,6 +53,8 @@ export function PlayerScoreCard({
   legsWon,
   showLegs,
   startScore,
+  rank,
+  showRank,
   isCurrent,
   isWinner,
 }: PlayerScoreCardProps) {
@@ -60,6 +66,11 @@ export function PlayerScoreCard({
       data-winner={isWinner ? "true" : "false"}
     >
       <header className={styles.head}>
+        {showRank && !isWinner && (
+          <span className={styles.rank} data-lead={rank === 1 ? "true" : "false"}>
+            {RANK_LABEL[rank] ?? `${rank}e`}
+          </span>
+        )}
         <span className={styles.name}>{player.name}</span>
         {showLegs && <span className={styles.legs}>🏆 {legsWon}</span>}
         {isWinner && <span className={styles.badge}>Gagné</span>}
@@ -97,6 +108,10 @@ export function PlayerScoreCard({
             <span className={styles.statValue}>
               {formatStat(state, stats, startScore)}
             </span>
+          </span>
+          <span className={styles.stat}>
+            <span className={styles.statLabel}>Dernier</span>
+            <span className={styles.statValue}>{stats.lastVisit || "—"}</span>
           </span>
           <span className={styles.stat}>
             <span className={styles.statLabel}>Best</span>

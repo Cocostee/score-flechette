@@ -10,6 +10,7 @@ import type { DartsGame } from "@/hooks/useDartsGame";
 import { getMode } from "@/data/modes";
 import { deadNumbers, dartMarks } from "@/utils/cricket";
 import { suggestCheckout } from "@/utils/checkout";
+import { liveRanks } from "@/utils/ranking";
 import { feedback } from "@/utils/feedback";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { PlayerScoreCard } from "@/components/ui/PlayerScoreCard";
@@ -89,6 +90,7 @@ export function GameScreen({ game }: GameScreenProps) {
   const matchOver =
     state.winnerId !== null &&
     state.legsWon[state.winnerId] >= state.legsTarget;
+  const ranks = liveRanks(state);
 
   const cricketOverlay =
     isCricket && currentPlayer
@@ -152,6 +154,8 @@ export function GameScreen({ game }: GameScreenProps) {
             legsWon={state.legsWon[player.id] ?? 0}
             showLegs={state.legsTarget > 1}
             startScore={state.rules.startScore}
+            rank={ranks[player.id]}
+            showRank={state.players.length > 1}
             isCurrent={index === state.currentIndex && !state.winnerId}
             isWinner={state.winnerId === player.id}
           />
@@ -162,6 +166,7 @@ export function GameScreen({ game }: GameScreenProps) {
         <div className={styles.turnHead}>
           <span className={styles.turnPlayer}>
             {currentPlayer ? currentPlayer.name : ""}
+            <span className={styles.turnRound}>Round {state.round}</span>
           </span>
           <span className={styles.turnTotal}>
             Tour&nbsp;:{" "}
