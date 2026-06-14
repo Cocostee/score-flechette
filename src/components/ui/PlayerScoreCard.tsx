@@ -1,14 +1,33 @@
 "use client";
 
-import type { Player, PlayerGameState } from "@/interfaces";
+import type { Player, PlayerGameState, PlayerStats } from "@/interfaces";
 import { CRICKET_NUMBERS } from "@/utils/cricket";
 import styles from "./PlayerScoreCard.module.css";
 
 interface PlayerScoreCardProps {
   player: Player;
   state: PlayerGameState;
+  stats?: PlayerStats;
+  legsWon: number;
+  showLegs: boolean;
+  startScore: number;
   isCurrent: boolean;
   isWinner: boolean;
+}
+
+/* Formats the headline stat (3-dart average or marks per round). */
+function formatStat(
+  state: PlayerGameState,
+  stats: PlayerStats | undefined,
+  startScore: number,
+): string {
+  if (!stats || stats.darts === 0) {
+    return "—";
+  }
+  if (state.kind === "x01") {
+    return (((startScore - state.score) / stats.darts) * 3).toFixed(1);
+  }
+  return ((stats.marks / stats.darts) * 3).toFixed(1);
 }
 
 /* Renders a closing-mark pip for a single cricket number. */
@@ -26,9 +45,14 @@ function MarksPips({ count }: { count: number }) {
 export function PlayerScoreCard({
   player,
   state,
+  stats,
+  legsWon,
+  showLegs,
+  startScore,
   isCurrent,
   isWinner,
 }: PlayerScoreCardProps) {
+  const statLabel = state.kind === "x01" ? "Moy. /3" : "MPR";
   return (
     <article
       className={styles.card}
@@ -37,7 +61,8 @@ export function PlayerScoreCard({
     >
       <header className={styles.head}>
         <span className={styles.name}>{player.name}</span>
-        {isWinner && <span className={styles.badge}>Vainqueur</span>}
+        {showLegs && <span className={styles.legs}>🏆 {legsWon}</span>}
+        {isWinner && <span className={styles.badge}>Gagné</span>}
         {!isWinner && isCurrent && <span className={styles.turn}>à toi</span>}
       </header>
 
@@ -62,6 +87,21 @@ export function PlayerScoreCard({
             <span className={styles.cricketScoreLabel}>Points</span>
             <span className={styles.cricketScoreValue}>{state.score}</span>
           </div>
+        </div>
+      )}
+
+      {stats && (
+        <div className={styles.stats}>
+          <span className={styles.stat}>
+            <span className={styles.statLabel}>{statLabel}</span>
+            <span className={styles.statValue}>
+              {formatStat(state, stats, startScore)}
+            </span>
+          </span>
+          <span className={styles.stat}>
+            <span className={styles.statLabel}>Best</span>
+            <span className={styles.statValue}>{stats.bestVisit || "—"}</span>
+          </span>
         </div>
       )}
     </article>

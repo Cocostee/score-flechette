@@ -10,6 +10,7 @@ import type {
   Multiplier,
   Player,
   PlayerGameState,
+  PlayerStats,
   X01PlayerState,
 } from "@/interfaces";
 import { applyX01Dart, createX01State, dartPoints } from "@/utils/x01";
@@ -17,6 +18,7 @@ import {
   applyCricketDart,
   checkCricketWin,
   createCricketState,
+  dartMarks,
 } from "@/utils/cricket";
 import { clearGame, loadGame, saveGame } from "@/utils/storage";
 
@@ -28,6 +30,7 @@ type Action =
   | { type: "REMOVE_FROM"; index: number }
   | { type: "NEXT_TURN" }
   | { type: "FINISH" }
+  | { type: "NEXT_LEG" }
   | { type: "NEW_GAME" }
   | { type: "GO_HOME" }
   | { type: "HYDRATE"; state: GameState };
@@ -44,10 +47,32 @@ const DEFAULT_STATE: GameState = {
   turnOver: false,
   bust: false,
   winnerId: null,
+  stats: {},
+  legsTarget: 1,
+  legsWon: {},
+  startIndex: 0,
   past: [],
 };
 
 const HISTORY_CAP = 80;
+
+/* Builds fresh per-player stats for a new leg. */
+function buildStats(players: Player[]): Record<string, PlayerStats> {
+  const stats: Record<string, PlayerStats> = {};
+  for (const player of players) {
+    stats[player.id] = { darts: 0, bestVisit: 0, marks: 0 };
+  }
+  return stats;
+}
+
+/* Builds a zeroed legs-won tally for every player. */
+function buildLegs(players: Player[]): Record<string, number> {
+  const legs: Record<string, number> = {};
+  for (const player of players) {
+    legs[player.id] = 0;
+  }
+  return legs;
+}
 
 /* Returns a state copy with its undo history stripped, for stacking. */
 function stripPast(state: GameState): GameState {
@@ -129,10 +154,17 @@ function reduceRegister(state: GameState, dart: DartThrow): GameState {
 
   const currentId = state.players[state.currentIndex].id;
   const darts = [...state.darts, dart];
+  const prior = state.stats[currentId];
+  const baseStats: PlayerStats = {
+    darts: prior.darts + 1,
+    bestVisit: prior.bestVisit,
+    marks: prior.marks + dartMarks(dart),
+  };
 
   if (state.mode === "x01") {
     const current = state.states[currentId] as X01PlayerState;
     const result = applyX01Dart(current, dart, state.rules);
+    const stats = { ...state.stats, [currentId]: baseStats };
 
     if (result.bust) {
       return {
@@ -141,6 +173,7 @@ function reduceRegister(state: GameState, dart: DartThrow): GameState {
         darts,
         turnOver: true,
         bust: true,
+        stats,
       };
     }
 
@@ -151,6 +184,10 @@ function reduceRegister(state: GameState, dart: DartThrow): GameState {
       darts,
       turnOver: result.win || darts.length >= 3,
       winnerId: result.win ? currentId : null,
+      stats,
+      legsWon: result.win
+        ? { ...state.legsWon, [currentId]: state.legsWon[currentId] + 1 }
+        : state.legsWon,
     };
   }
 
@@ -170,6 +207,10 @@ function reduceRegister(state: GameState, dart: DartThrow): GameState {
     darts,
     turnOver: win || darts.length >= 3,
     winnerId: win ? currentId : null,
+    stats: { ...state.stats, [currentId]: baseStats },
+    legsWon: win
+      ? { ...state.legsWon, [currentId]: state.legsWon[currentId] + 1 }
+      : state.legsWon,
   };
 }
 
@@ -198,6 +239,10 @@ function reducer(state: GameState, action: Action): GameState {
         turnOver: false,
         bust: false,
         winnerId: null,
+        stats: buildStats(action.config.players),
+        legsTarget: action.config.legsTarget,
+        legsWon: buildLegs(action.config.players),
+        startIndex: 0,
         past: [],
       };
     }
@@ -245,6 +290,20 @@ function reducer(state: GameState, action: Action): GameState {
       if (state.winnerId) {
         return state;
       }
+      const endingId = state.players[state.currentIndex].id;
+      const visit = state.bust
+        ? 0
+        : state.mode === "x01"
+          ? state.darts.reduce((sum, dart) => sum + dart.points, 0)
+          : state.darts.reduce((sum, dart) => sum + dartMarks(dart), 0);
+      const ending = state.stats[endingId];
+      const stats = {
+        ...state.stats,
+        [endingId]: {
+          ...ending,
+          bestVisit: Math.max(ending.bestVisit, visit),
+        },
+      };
       const currentIndex = (state.currentIndex + 1) % state.players.length;
       return withHistory(state, {
         ...state,
@@ -253,17 +312,43 @@ function reducer(state: GameState, action: Action): GameState {
         turnOver: false,
         bust: false,
         turnSnapshot: cloneStates(state.states),
+        stats,
       });
     }
 
     case "FINISH":
       return { ...state, screen: "result" };
 
+    case "NEXT_LEG": {
+      const startIndex = (state.startIndex + 1) % state.players.length;
+      const config: GameConfig = {
+        mode: state.mode,
+        rules: state.rules,
+        players: state.players,
+        legsTarget: state.legsTarget,
+      };
+      const states = buildStates(config);
+      return {
+        ...state,
+        states,
+        currentIndex: startIndex,
+        startIndex,
+        darts: [],
+        turnSnapshot: cloneStates(states),
+        turnOver: false,
+        bust: false,
+        winnerId: null,
+        stats: buildStats(state.players),
+        past: [],
+      };
+    }
+
     case "NEW_GAME": {
       const config: GameConfig = {
         mode: state.mode,
         rules: state.rules,
         players: state.players,
+        legsTarget: state.legsTarget,
       };
       const states = buildStates(config);
       return {
@@ -276,6 +361,9 @@ function reducer(state: GameState, action: Action): GameState {
         turnOver: false,
         bust: false,
         winnerId: null,
+        stats: buildStats(state.players),
+        legsWon: buildLegs(state.players),
+        startIndex: 0,
         past: [],
       };
     }
@@ -283,8 +371,17 @@ function reducer(state: GameState, action: Action): GameState {
     case "GO_HOME":
       return { ...DEFAULT_STATE };
 
-    case "HYDRATE":
-      return { ...action.state, past: action.state.past ?? [] };
+    case "HYDRATE": {
+      const saved = action.state;
+      return {
+        ...saved,
+        past: saved.past ?? [],
+        stats: saved.stats ?? buildStats(saved.players),
+        legsTarget: saved.legsTarget ?? 1,
+        legsWon: saved.legsWon ?? buildLegs(saved.players),
+        startIndex: saved.startIndex ?? 0,
+      };
+    }
 
     default:
       return state;
@@ -302,6 +399,7 @@ export interface DartsGame {
   removeDart: (index: number) => void;
   nextTurn: () => void;
   finishGame: () => void;
+  nextLeg: () => void;
   newGame: () => void;
   goHome: () => void;
 }
@@ -357,6 +455,7 @@ export function useDartsGame(): DartsGame {
       removeDart: (index) => dispatch({ type: "REMOVE_FROM", index }),
       nextTurn: () => dispatch({ type: "NEXT_TURN" }),
       finishGame: () => dispatch({ type: "FINISH" }),
+      nextLeg: () => dispatch({ type: "NEXT_LEG" }),
       newGame: () => dispatch({ type: "NEW_GAME" }),
       goHome: () => dispatch({ type: "GO_HOME" }),
     };

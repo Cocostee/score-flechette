@@ -139,6 +139,17 @@
   opacity: 0.4;
 }
 
+.markers {
+  pointer-events: none;
+}
+
+.marker {
+  fill: var(--gold-bright);
+  stroke: #1a1206;
+  stroke-width: 2.5;
+  animation: popIn 0.18s ease both;
+}
+
 .labels {
   pointer-events: none;
 }

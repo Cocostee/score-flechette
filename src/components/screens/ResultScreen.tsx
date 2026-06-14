@@ -17,6 +17,9 @@ function rankPlayers(game: DartsGame): Player[] {
   const winner = state.players.find((p) => p.id === state.winnerId);
 
   const sorted = [...others].sort((a, b) => {
+    if (state.legsTarget > 1) {
+      return state.legsWon[b.id] - state.legsWon[a.id];
+    }
     const sa = state.states[a.id];
     const sb = state.states[b.id];
     if (sa.kind === "x01" && sb.kind === "x01") {
@@ -35,12 +38,16 @@ function rankPlayers(game: DartsGame): Player[] {
 
 /* Returns the value shown for a player in the final standings. */
 function summaryValue(game: DartsGame, player: Player): string {
-  const state = game.state.states[player.id];
-  if (state.kind === "x01") {
-    return `${state.score} restants`;
+  const { state } = game;
+  if (state.legsTarget > 1) {
+    return `${state.legsWon[player.id] ?? 0} manche${(state.legsWon[player.id] ?? 0) > 1 ? "s" : ""}`;
   }
-  const closed = allClosed(state);
-  return `${state.score} pts${closed ? " · fermé" : ""}`;
+  const ps = state.states[player.id];
+  if (ps.kind === "x01") {
+    return `${ps.score} restants`;
+  }
+  const closed = allClosed(ps);
+  return `${ps.score} pts${closed ? " · fermé" : ""}`;
 }
 
 /* End screen: final standings with replay and home actions. */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   CricketPlayerState,
   DartThrow,
@@ -8,8 +8,9 @@ import type {
 } from "@/interfaces";
 import type { DartsGame } from "@/hooks/useDartsGame";
 import { getMode } from "@/data/modes";
-import { deadNumbers } from "@/utils/cricket";
+import { deadNumbers, dartMarks } from "@/utils/cricket";
 import { suggestCheckout } from "@/utils/checkout";
+import { feedback } from "@/utils/feedback";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { PlayerScoreCard } from "@/components/ui/PlayerScoreCard";
 import { DartPad } from "@/components/ui/DartPad";
@@ -38,27 +39,13 @@ function dartLabel(dart: DartThrow): string {
   return `${prefix}${dart.segment}`;
 }
 
-/* Returns the number of cricket marks a single dart is worth. */
-function marksOf(dart: DartThrow): number {
-  if (dart.segment === 50) {
-    return 2;
-  }
-  if (dart.segment === 25) {
-    return 1;
-  }
-  if (dart.segment >= 15 && dart.segment <= 20) {
-    return dart.multiplier;
-  }
-  return 0;
-}
-
 /* Turn-by-turn play screen: scoreboard, dart input and turn controls. */
 export function GameScreen({ game }: GameScreenProps) {
   const { state, currentPlayer } = game;
   const info = getMode(state.mode);
   const isCricket = state.mode !== "x01";
   const turnPoints = state.darts.reduce((sum, dart) => sum + dart.points, 0);
-  const turnMarks = state.darts.reduce((sum, dart) => sum + marksOf(dart), 0);
+  const turnMarks = state.darts.reduce((sum, dart) => sum + dartMarks(dart), 0);
   const slots = [0, 1, 2];
 
   const activeX01 =
@@ -79,6 +66,29 @@ export function GameScreen({ game }: GameScreenProps) {
   );
   const inputDisabled = state.turnOver || state.winnerId !== null;
   const [confirmQuit, setConfirmQuit] = useState(false);
+  const [muted, setMuted] = usePersistedState("oche:mute", false);
+
+  const previous = useRef({ darts: 0, bust: false, winner: "" });
+  useEffect(() => {
+    const prev = previous.current;
+    const winner = state.winnerId ?? "";
+    if (winner && winner !== prev.winner) {
+      feedback("win", muted);
+    } else if (state.bust && !prev.bust) {
+      feedback("bust", muted);
+    } else if (state.darts.length > prev.darts) {
+      feedback("throw", muted);
+    }
+    previous.current = {
+      darts: state.darts.length,
+      bust: state.bust,
+      winner,
+    };
+  }, [state.darts.length, state.bust, state.winnerId, muted]);
+
+  const matchOver =
+    state.winnerId !== null &&
+    state.legsWon[state.winnerId] >= state.legsTarget;
 
   const cricketOverlay =
     isCricket && currentPlayer
@@ -113,6 +123,14 @@ export function GameScreen({ game }: GameScreenProps) {
         <button
           type="button"
           className={styles.icon}
+          onClick={() => setMuted(!muted)}
+          aria-label={muted ? "Activer le son" : "Couper le son"}
+        >
+          {muted ? "🔇" : "🔊"}
+        </button>
+        <button
+          type="button"
+          className={styles.icon}
           onClick={game.undo}
           disabled={state.past.length === 0}
           aria-label="Annuler la dernière action"
@@ -130,6 +148,10 @@ export function GameScreen({ game }: GameScreenProps) {
             key={player.id}
             player={player}
             state={state.states[player.id]}
+            stats={state.stats[player.id]}
+            legsWon={state.legsWon[player.id] ?? 0}
+            showLegs={state.legsTarget > 1}
+            startScore={state.rules.startScore}
             isCurrent={index === state.currentIndex && !state.winnerId}
             isWinner={state.winnerId === player.id}
           />
@@ -153,7 +175,7 @@ export function GameScreen({ game }: GameScreenProps) {
             const dart = state.darts[slot];
             const sub = dart
               ? isCricket
-                ? `${marksOf(dart)} marq.`
+                ? `${dartMarks(dart)} marq.`
                 : `${dart.points} pts`
               : `Fléch. ${slot + 1}`;
             return (
@@ -208,6 +230,7 @@ export function GameScreen({ game }: GameScreenProps) {
             onThrow={game.registerDart}
             disabled={inputDisabled}
             cricket={cricketOverlay}
+            darts={state.darts}
           />
           <button
             type="button"
@@ -235,20 +258,26 @@ export function GameScreen({ game }: GameScreenProps) {
         {state.turnOver ? "Joueur suivant →" : "Passer le tour"}
       </button>
 
-      {state.winnerId && currentPlayer && (
+      {state.winnerId && (
         <div className={styles.overlay}>
           <div className={styles.victory}>
-            <p className={styles.victoryKicker}>Partie terminée</p>
+            <p className={styles.victoryKicker}>
+              {matchOver ? "Match terminé" : "Manche gagnée"}
+            </p>
             <h2 className={styles.victoryName}>
               {state.players.find((p) => p.id === state.winnerId)?.name}
             </h2>
-            <p className={styles.victorySub}>remporte la manche</p>
+            <p className={styles.victorySub}>
+              {state.legsTarget > 1
+                ? `${state.legsWon[state.winnerId]} / ${state.legsTarget} manche${state.legsTarget > 1 ? "s" : ""}`
+                : "remporte la manche"}
+            </p>
             <button
               type="button"
               className={styles.victoryBtn}
-              onClick={game.finishGame}
+              onClick={matchOver ? game.finishGame : game.nextLeg}
             >
-              Voir le récap
+              {matchOver ? "Voir le récap" : "Manche suivante →"}
             </button>
           </div>
         </div>

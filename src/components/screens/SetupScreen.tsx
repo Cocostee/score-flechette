@@ -17,21 +17,45 @@ interface SetupScreenProps {
 
 const MAX_PLAYERS = 6;
 const MIN_PLAYERS = 1;
+const NAMES_KEY = "oche:lastPlayers";
+const LEGS_OPTIONS = [1, 2, 3, 5];
 
 /* Creates a fresh empty player slot. */
 function emptyPlayer(): Player {
   return { id: crypto.randomUUID(), name: "" };
 }
 
-/* Configuration screen: players, names and 01 rule options. */
+/* Reads the previously used player names, or two empty slots. */
+function initialPlayers(): Player[] {
+  let names: string[] = [];
+  try {
+    const raw = window.localStorage.getItem(NAMES_KEY);
+    if (raw) {
+      names = JSON.parse(raw) as string[];
+    }
+  } catch {
+    names = [];
+  }
+  const seed = names.length >= 1 ? names : ["", ""];
+  return seed.map((name) => ({ id: crypto.randomUUID(), name }));
+}
+
+/* Stores the player names so the next game can prefill them. */
+function rememberNames(names: string[]): void {
+  try {
+    window.localStorage.setItem(NAMES_KEY, JSON.stringify(names));
+  } catch {
+    return;
+  }
+}
+
+/* Configuration screen: players, names, legs and 01 rule options. */
 export function SetupScreen({ game }: SetupScreenProps) {
   const mode = game.state.mode;
   const info = getMode(mode);
-  const [players, setPlayers] = useState<Player[]>([
-    { id: crypto.randomUUID(), name: "" },
-    { id: crypto.randomUUID(), name: "" },
-  ]);
+  const [players, setPlayers] = useState<Player[]>(initialPlayers);
   const [rules, setRules] = useState<X01Rules>(game.state.rules);
+  const [legsTarget, setLegsTarget] = useState(1);
 
   const isX01 = mode === "x01";
 
@@ -57,7 +81,8 @@ export function SetupScreen({ game }: SetupScreenProps) {
       id: player.id,
       name: player.name.trim() || `Joueur ${index + 1}`,
     }));
-    game.startGame({ mode, rules, players: named });
+    rememberNames(named.map((player) => player.name));
+    game.startGame({ mode, rules, players: named, legsTarget });
   };
 
   return (
@@ -167,6 +192,25 @@ export function SetupScreen({ game }: SetupScreenProps) {
           </div>
         </section>
       )}
+
+      <section className={styles.block}>
+        <h2 className={styles.blockTitle}>Manches gagnantes</h2>
+        <p className={styles.optionLabel}>Premier à</p>
+        <div className={styles.segment}>
+          {LEGS_OPTIONS.map((count) => (
+            <button
+              key={count}
+              type="button"
+              className={`${styles.segBtn} ${
+                legsTarget === count ? styles.segOn : ""
+              }`}
+              onClick={() => setLegsTarget(count)}
+            >
+              {count === 1 ? "1 manche" : count}
+            </button>
+          ))}
+        </div>
+      </section>
 
       <button type="button" className={styles.launch} onClick={launch}>
         Lancer la partie

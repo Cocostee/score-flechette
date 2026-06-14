@@ -12,6 +12,20 @@ interface CricketHit {
   value: number;
 }
 
+/* Returns the number of cricket marks a single dart is worth. */
+export function dartMarks(dart: DartThrow): number {
+  if (dart.segment === 50) {
+    return 2;
+  }
+  if (dart.segment === 25) {
+    return 1;
+  }
+  if (dart.segment >= 15 && dart.segment <= 20) {
+    return dart.multiplier;
+  }
+  return 0;
+}
+
 /* Builds the starting state for one player of a cricket game. */
 export function createCricketState(): CricketPlayerState {
   const marks: Record<number, number> = {};

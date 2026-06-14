@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import type { Multiplier } from "@/interfaces";
+import type { DartThrow, Multiplier } from "@/interfaces";
 import {
   BOARD_ORDER,
   RINGS,
   buildBoardZones,
+  markerPoint,
   pointOnBoard,
   sectorPath,
 } from "@/utils/board";
@@ -20,6 +21,7 @@ interface DartBoardProps {
   onThrow: (segment: number, multiplier: Multiplier) => void;
   disabled: boolean;
   cricket?: CricketOverlay;
+  darts?: DartThrow[];
 }
 
 const CX = 210;
@@ -30,8 +32,20 @@ const LIVE = new Set([15, 16, 17, 18, 19, 20]);
 type NumberState = "open" | "closed" | "dead" | "inactive";
 
 /* Interactive dartboard: tap the exact zone hit, the multiplier is inferred. */
-export function DartBoard({ onThrow, disabled, cricket }: DartBoardProps) {
+export function DartBoard({
+  onThrow,
+  disabled,
+  cricket,
+  darts = [],
+}: DartBoardProps) {
   const zones = useMemo(() => buildBoardZones(CX, CY, R), []);
+
+  const markers = darts
+    .map((dart, index) => {
+      const point = markerPoint(CX, CY, R, dart.segment, dart.multiplier);
+      return point ? { point, index } : null;
+    })
+    .filter((entry): entry is { point: { x: number; y: number }; index: number } => entry !== null);
 
   const stateOf = (num: number): NumberState => {
     if (!cricket) {
@@ -161,6 +175,21 @@ export function DartBoard({ onThrow, disabled, cricket }: DartBoardProps) {
             >
               {num}
             </text>
+          );
+        })}
+      </g>
+
+      <g className={styles.markers}>
+        {markers.map(({ point, index }) => {
+          const offset = (index - 1) * 7;
+          return (
+            <circle
+              key={`m-${index}`}
+              cx={point.x + offset}
+              cy={point.y}
+              r={6}
+              className={styles.marker}
+            />
           );
         })}
       </g>

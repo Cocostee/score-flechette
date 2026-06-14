@@ -33,6 +33,8 @@
 }
 
 .name {
+  flex: 1;
+  min-width: 0;
   font-size: 1rem;
   font-weight: 600;
   color: var(--chalk);
@@ -41,8 +43,15 @@
   text-overflow: ellipsis;
 }
 
+.legs {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--gold-bright);
+}
+
 .badge {
-  margin-left: auto;
+  flex-shrink: 0;
   font-size: 0.64rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -53,7 +62,7 @@
 }
 
 .turn {
-  margin-left: auto;
+  flex-shrink: 0;
   font-size: 0.66rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -146,4 +155,32 @@
   font-family: var(--font-display), serif;
   font-size: 1.7rem;
   color: var(--chalk);
+}
+
+.stats {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.statLabel {
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--chalk-faint);
+}
+
+.statValue {
+  font-family: var(--font-display), serif;
+  font-size: 1.15rem;
+  color: var(--chalk-dim);
 }

@@ -39,6 +39,12 @@ export interface CricketPlayerState {
 
 export type PlayerGameState = X01PlayerState | CricketPlayerState;
 
+export interface PlayerStats {
+  darts: number;
+  bestVisit: number;
+  marks: number;
+}
+
 export interface GameState {
   screen: ScreenName;
   mode: GameMode;
@@ -51,6 +57,10 @@ export interface GameState {
   turnOver: boolean;
   bust: boolean;
   winnerId: string | null;
+  stats: Record<string, PlayerStats>;
+  legsTarget: number;
+  legsWon: Record<string, number>;
+  startIndex: number;
   past: GameState[];
 }
 
@@ -58,6 +68,7 @@ export interface GameConfig {
   mode: GameMode;
   rules: X01Rules;
   players: Player[];
+  legsTarget: number;
 }
 
 export interface ModeInfo {

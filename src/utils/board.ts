@@ -72,6 +72,37 @@ function annularSector(
   ].join(" ");
 }
 
+/* Returns an approximate landing point on the board for a thrown dart. */
+export function markerPoint(
+  cx: number,
+  cy: number,
+  radius: number,
+  segment: number,
+  multiplier: number,
+): Point | null {
+  if (segment === 0) {
+    return null;
+  }
+  if (segment === 50) {
+    return { x: cx, y: cy };
+  }
+  if (segment === 25) {
+    return pointOnBoard(cx, cy, radius, 0, (RINGS.bull50 + RINGS.bull25) / 2);
+  }
+  const index = BOARD_ORDER.indexOf(segment);
+  if (index < 0) {
+    return null;
+  }
+  const angle = index * 18;
+  let frac = (RINGS.tripleOut + RINGS.doubleIn) / 2;
+  if (multiplier === 3) {
+    frac = (RINGS.tripleIn + RINGS.tripleOut) / 2;
+  } else if (multiplier === 2) {
+    frac = (RINGS.doubleIn + RINGS.doubleOut) / 2;
+  }
+  return pointOnBoard(cx, cy, radius, angle, frac);
+}
+
 /* Builds a full-sector path between two radii, used for cricket overlays. */
 export function sectorPath(
   cx: number,
