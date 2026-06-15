@@ -223,6 +223,23 @@
   cursor: not-allowed;
 }
 
+.stats {
+  margin-top: 6px;
+  padding: 14px;
+  border: none;
+  border-radius: 11px;
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--line-strong);
+  color: var(--gold-bright);
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.14s ease;
+}
+
+.stats:hover {
+  border-color: var(--gold);
+}
+
 .signout {
   margin-top: 6px;
   padding: 13px;

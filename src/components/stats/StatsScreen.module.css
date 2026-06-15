@@ -1,0 +1,198 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  overflow-y: auto;
+  background-color: var(--bg);
+  background-image: radial-gradient(
+    900px 600px at 50% -10%,
+    rgba(201, 164, 74, 0.1),
+    transparent 60%
+  );
+  padding: clamp(16px, 4vw, 28px);
+  animation: rise 0.25s ease both;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 640px;
+  margin: 0 auto 18px;
+}
+
+.back {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 9px 16px;
+  color: var(--chalk-dim);
+  font-size: 0.9rem;
+  transition: all 0.15s ease;
+}
+
+.back:hover {
+  color: var(--chalk);
+  border-color: var(--gold);
+}
+
+.title {
+  flex: 1;
+  text-align: center;
+  font-size: 2.4rem;
+  color: var(--chalk);
+}
+
+.spacer {
+  width: 92px;
+}
+
+.empty {
+  max-width: 640px;
+  margin: 40px auto;
+  text-align: center;
+  color: var(--chalk-dim);
+  line-height: 1.5;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 640px;
+  margin: 0 auto 18px;
+}
+
+.tab {
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--chalk-dim);
+  font-size: 0.92rem;
+  font-weight: 600;
+  transition: all 0.14s ease;
+}
+
+.tab[data-on="true"] {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, var(--gold), #b48f38);
+  color: var(--bg-deep);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  max-width: 640px;
+  margin: 0 auto 18px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--surface), var(--bg-deep));
+}
+
+.cardValue {
+  font-family: var(--font-display), serif;
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--chalk);
+}
+
+.cardPct {
+  font-size: 1rem;
+  color: var(--green);
+  margin-left: 6px;
+}
+
+.cardLabel {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--chalk-faint);
+}
+
+.block {
+  max-width: 640px;
+  margin: 0 auto 18px;
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--surface), var(--bg-deep));
+}
+
+.blockTitle {
+  font-size: 1.4rem;
+  color: var(--chalk);
+  margin-bottom: 14px;
+  letter-spacing: 0.04em;
+}
+
+.chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.chartTick {
+  fill: var(--chalk-faint);
+  font-size: 9px;
+  font-family: var(--font-body), sans-serif;
+}
+
+.chartEmpty {
+  color: var(--chalk-faint);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.historyRow {
+  display: grid;
+  grid-template-columns: 64px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: var(--bg-deep);
+  border: 1px solid var(--line);
+}
+
+.histDate {
+  font-size: 0.8rem;
+  color: var(--chalk-faint);
+}
+
+.histMode {
+  font-size: 0.92rem;
+  color: var(--chalk);
+}
+
+.histPlace {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--chalk-dim);
+}
+
+.histPlace[data-win="true"] {
+  color: var(--green);
+}
+
+.histAvg {
+  font-family: var(--font-display), serif;
+  font-size: 1.3rem;
+  color: var(--gold-bright);
+  min-width: 42px;
+  text-align: right;
+}

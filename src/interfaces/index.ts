@@ -86,3 +86,27 @@ export interface TrackedPlayer {
   id: string;
   name: string;
 }
+
+export interface GameStatRow {
+  playerId: string | null;
+  guestName: string | null;
+  placement: number;
+  legsWon: number;
+  darts: number;
+  pointsScored: number;
+  bestVisit: number;
+  avg3: number;
+  marks: number;
+  mode: GameMode;
+  createdAt: string;
+}
+
+export interface ProfileStats {
+  gamesPlayed: number;
+  wins: number;
+  winRate: number;
+  bestVisit: number;
+  bestAvg: number;
+  avgByMode: Record<string, number>;
+  series: { date: string; avg3: number; mode: GameMode; won: boolean }[];
+}

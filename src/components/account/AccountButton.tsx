@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlayers } from "@/hooks/usePlayers";
+import { StatsScreen } from "@/components/stats/StatsScreen";
 import styles from "./AccountButton.module.css";
 
 /* Account entry point: opens auth or the tracked-profiles manager. */
@@ -16,6 +17,7 @@ export function AccountButton() {
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [newName, setNewName] = useState("");
+  const [showStats, setShowStats] = useState(false);
 
   if (!auth.configured) {
     return null;
@@ -178,6 +180,17 @@ export function AccountButton() {
 
                 <button
                   type="button"
+                  className={styles.stats}
+                  onClick={() => {
+                    setOpen(false);
+                    setShowStats(true);
+                  }}
+                >
+                  📊 Mes stats
+                </button>
+
+                <button
+                  type="button"
                   className={styles.signout}
                   onClick={() => auth.signOut()}
                 >
@@ -189,6 +202,14 @@ export function AccountButton() {
             {message && <p className={styles.message}>{message}</p>}
           </div>
         </div>
+      )}
+
+      {showStats && auth.user && (
+        <StatsScreen
+          userId={auth.user.id}
+          profiles={players.players}
+          onClose={() => setShowStats(false)}
+        />
       )}
     </>
   );
