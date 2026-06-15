@@ -3,12 +3,15 @@
 import { useState } from "react";
 import type {
   Player,
+  TrackedPlayer,
   X01InOption,
   X01OutOption,
   X01Rules,
 } from "@/interfaces";
 import type { DartsGame } from "@/hooks/useDartsGame";
 import { getMode, X01_START_SCORES } from "@/data/modes";
+import { useAuth } from "@/hooks/useAuth";
+import { usePlayers } from "@/hooks/usePlayers";
 import styles from "./SetupScreen.module.css";
 
 interface SetupScreenProps {
@@ -53,11 +56,35 @@ function rememberNames(names: string[]): void {
 export function SetupScreen({ game }: SetupScreenProps) {
   const mode = game.state.mode;
   const info = getMode(mode);
+  const auth = useAuth();
+  const profiles = usePlayers(auth.user?.id ?? null);
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
   const [rules, setRules] = useState<X01Rules>(game.state.rules);
   const [legsTarget, setLegsTarget] = useState(1);
 
   const isX01 = mode === "x01";
+
+  const addProfile = (profile: TrackedPlayer) =>
+    setPlayers((list) => {
+      if (
+        list.length >= MAX_PLAYERS ||
+        list.some((player) => player.profileId === profile.id)
+      ) {
+        return list;
+      }
+      const slot = list.find((player) => !player.profileId && !player.name.trim());
+      if (slot) {
+        return list.map((player) =>
+          player.id === slot.id
+            ? { ...player, name: profile.name, profileId: profile.id }
+            : player,
+        );
+      }
+      return [
+        ...list,
+        { id: crypto.randomUUID(), name: profile.name, profileId: profile.id },
+      ];
+    });
 
   const rename = (id: string, name: string) =>
     setPlayers((list) =>
@@ -80,6 +107,7 @@ export function SetupScreen({ game }: SetupScreenProps) {
     const named = players.map((player, index) => ({
       id: player.id,
       name: player.name.trim() || `Joueur ${index + 1}`,
+      profileId: player.profileId,
     }));
     rememberNames(named.map((player) => player.name));
     game.startGame({ mode, rules, players: named, legsTarget });
@@ -105,12 +133,18 @@ export function SetupScreen({ game }: SetupScreenProps) {
         <div className={styles.players}>
           {players.map((player, index) => (
             <div key={player.id} className={styles.playerRow}>
-              <span className={styles.playerIndex}>{index + 1}</span>
+              <span
+                className={styles.playerIndex}
+                data-linked={player.profileId ? "true" : "false"}
+              >
+                {player.profileId ? "★" : index + 1}
+              </span>
               <input
                 className={styles.input}
                 value={player.name}
                 placeholder={`Joueur ${index + 1}`}
                 maxLength={14}
+                readOnly={!!player.profileId}
                 onChange={(event) => rename(player.id, event.target.value)}
               />
               <button
@@ -131,8 +165,31 @@ export function SetupScreen({ game }: SetupScreenProps) {
           disabled={players.length >= MAX_PLAYERS}
           onClick={addPlayer}
         >
-          + Ajouter un joueur
+          + Ajouter un invité
         </button>
+
+        {auth.user && profiles.players.length > 0 && (
+          <div className={styles.profilesPick}>
+            <p className={styles.optionLabel}>Mes joueurs</p>
+            <div className={styles.profileChips}>
+              {profiles.players.map((profile) => {
+                const used = players.some((p) => p.profileId === profile.id);
+                return (
+                  <button
+                    key={profile.id}
+                    type="button"
+                    className={styles.profileChip}
+                    data-used={used ? "true" : "false"}
+                    disabled={used || players.length >= MAX_PLAYERS}
+                    onClick={() => addProfile(profile)}
+                  >
+                    ★ {profile.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </section>
 
       {isX01 && (

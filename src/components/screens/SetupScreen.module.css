@@ -169,6 +169,45 @@
   cursor: not-allowed;
 }
 
+.playerIndex[data-linked="true"] {
+  background: linear-gradient(180deg, var(--gold), #b48f38);
+  color: var(--bg-deep);
+}
+
+.profilesPick {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.profileChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profileChip {
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--bg-deep);
+  color: var(--gold-bright);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.14s ease;
+}
+
+.profileChip:hover:not(:disabled) {
+  border-color: var(--gold);
+  background: rgba(201, 164, 74, 0.1);
+}
+
+.profileChip[data-used="true"] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
 .optionLabel {
   margin: 18px 0 8px;
   font-size: 0.78rem;

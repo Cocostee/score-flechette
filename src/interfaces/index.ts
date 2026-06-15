@@ -23,6 +23,7 @@ export interface X01Rules {
 export interface Player {
   id: string;
   name: string;
+  profileId?: string;
 }
 
 export interface X01PlayerState {
@@ -63,6 +64,7 @@ export interface GameState {
   legsTarget: number;
   legsWon: Record<string, number>;
   startIndex: number;
+  recorded: boolean;
   past: GameState[];
 }
 

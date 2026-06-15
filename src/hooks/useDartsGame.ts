@@ -33,6 +33,7 @@ type Action =
   | { type: "NEXT_LEG" }
   | { type: "NEW_GAME" }
   | { type: "GO_HOME" }
+  | { type: "MARK_RECORDED" }
   | { type: "HYDRATE"; state: GameState };
 
 const DEFAULT_STATE: GameState = {
@@ -52,6 +53,7 @@ const DEFAULT_STATE: GameState = {
   legsTarget: 1,
   legsWon: {},
   startIndex: 0,
+  recorded: false,
   past: [],
 };
 
@@ -246,6 +248,7 @@ function reducer(state: GameState, action: Action): GameState {
         legsTarget: action.config.legsTarget,
         legsWon: buildLegs(action.config.players),
         startIndex: 0,
+        recorded: false,
         past: [],
       };
     }
@@ -373,12 +376,16 @@ function reducer(state: GameState, action: Action): GameState {
         stats: buildStats(state.players),
         legsWon: buildLegs(state.players),
         startIndex: 0,
+        recorded: false,
         past: [],
       };
     }
 
     case "GO_HOME":
       return { ...DEFAULT_STATE };
+
+    case "MARK_RECORDED":
+      return { ...state, recorded: true };
 
     case "HYDRATE": {
       const saved = action.state;
@@ -390,6 +397,7 @@ function reducer(state: GameState, action: Action): GameState {
         legsTarget: saved.legsTarget ?? 1,
         legsWon: saved.legsWon ?? buildLegs(saved.players),
         startIndex: saved.startIndex ?? 0,
+        recorded: saved.recorded ?? false,
       };
     }
 
@@ -412,6 +420,7 @@ export interface DartsGame {
   nextLeg: () => void;
   newGame: () => void;
   goHome: () => void;
+  markRecorded: () => void;
 }
 
 /* The single source of truth for game state, progression and scoring. */
@@ -468,6 +477,7 @@ export function useDartsGame(): DartsGame {
       nextLeg: () => dispatch({ type: "NEXT_LEG" }),
       newGame: () => dispatch({ type: "NEW_GAME" }),
       goHome: () => dispatch({ type: "GO_HOME" }),
+      markRecorded: () => dispatch({ type: "MARK_RECORDED" }),
     };
   }, [state]);
 }
