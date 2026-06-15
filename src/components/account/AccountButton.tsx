@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlayers } from "@/hooks/usePlayers";
 import { StatsScreen } from "@/components/stats/StatsScreen";
+import { FriendsScreen } from "@/components/account/FriendsScreen";
 import styles from "./AccountButton.module.css";
 
 /* Account entry point: opens auth or the tracked-profiles manager. */
@@ -18,6 +19,7 @@ export function AccountButton() {
   const [busy, setBusy] = useState(false);
   const [newName, setNewName] = useState("");
   const [showStats, setShowStats] = useState(false);
+  const [showFriends, setShowFriends] = useState(false);
 
   if (!auth.configured) {
     return null;
@@ -183,6 +185,17 @@ export function AccountButton() {
                   className={styles.stats}
                   onClick={() => {
                     setOpen(false);
+                    setShowFriends(true);
+                  }}
+                >
+                  👥 Mes amis
+                </button>
+
+                <button
+                  type="button"
+                  className={styles.stats}
+                  onClick={() => {
+                    setOpen(false);
                     setShowStats(true);
                   }}
                 >
@@ -209,6 +222,13 @@ export function AccountButton() {
           userId={auth.user.id}
           profiles={players.players}
           onClose={() => setShowStats(false)}
+        />
+      )}
+
+      {showFriends && auth.user && (
+        <FriendsScreen
+          userId={auth.user.id}
+          onClose={() => setShowFriends(false)}
         />
       )}
     </>
