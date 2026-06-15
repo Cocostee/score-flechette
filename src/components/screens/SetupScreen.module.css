@@ -208,6 +208,35 @@
   text-decoration: line-through;
 }
 
+.friendChip {
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--bg-deep);
+  color: var(--chalk);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.14s ease;
+}
+
+.friendChip:hover:not(:disabled) {
+  border-color: var(--green);
+  background: rgba(42, 161, 94, 0.1);
+}
+
+.friendChip[data-used="true"] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.pickHint {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: var(--chalk-faint);
+  line-height: 1.4;
+}
+
 .optionLabel {
   margin: 18px 0 8px;
   font-size: 0.78rem;

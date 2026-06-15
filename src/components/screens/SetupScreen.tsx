@@ -12,6 +12,7 @@ import type { DartsGame } from "@/hooks/useDartsGame";
 import { getMode, X01_START_SCORES } from "@/data/modes";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlayers } from "@/hooks/usePlayers";
+import { useSocial } from "@/hooks/useSocial";
 import styles from "./SetupScreen.module.css";
 
 interface SetupScreenProps {
@@ -58,6 +59,7 @@ export function SetupScreen({ game }: SetupScreenProps) {
   const info = getMode(mode);
   const auth = useAuth();
   const profiles = usePlayers(auth.user?.id ?? null);
+  const social = useSocial(auth.user?.id ?? null);
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
   const [rules, setRules] = useState<X01Rules>(game.state.rules);
   const [legsTarget, setLegsTarget] = useState(1);
@@ -86,6 +88,30 @@ export function SetupScreen({ game }: SetupScreenProps) {
       ];
     });
 
+  const addFriendSlot = (friendUserId: string, label: string) =>
+    setPlayers((list) => {
+      if (
+        list.length >= MAX_PLAYERS ||
+        list.some((player) => player.friendUserId === friendUserId)
+      ) {
+        return list;
+      }
+      const slot = list.find(
+        (player) => !player.profileId && !player.friendUserId && !player.name.trim(),
+      );
+      if (slot) {
+        return list.map((player) =>
+          player.id === slot.id
+            ? { ...player, name: label, friendUserId }
+            : player,
+        );
+      }
+      return [
+        ...list,
+        { id: crypto.randomUUID(), name: label, friendUserId },
+      ];
+    });
+
   const rename = (id: string, name: string) =>
     setPlayers((list) =>
       list.map((player) => (player.id === id ? { ...player, name } : player)),
@@ -108,6 +134,7 @@ export function SetupScreen({ game }: SetupScreenProps) {
       id: player.id,
       name: player.name.trim() || `Joueur ${index + 1}`,
       profileId: player.profileId,
+      friendUserId: player.friendUserId,
     }));
     rememberNames(named.map((player) => player.name));
     game.startGame({ mode, rules, players: named, legsTarget });
@@ -135,16 +162,18 @@ export function SetupScreen({ game }: SetupScreenProps) {
             <div key={player.id} className={styles.playerRow}>
               <span
                 className={styles.playerIndex}
-                data-linked={player.profileId ? "true" : "false"}
+                data-linked={
+                  player.profileId || player.friendUserId ? "true" : "false"
+                }
               >
-                {player.profileId ? "★" : index + 1}
+                {player.profileId ? "★" : player.friendUserId ? "👤" : index + 1}
               </span>
               <input
                 className={styles.input}
                 value={player.name}
                 placeholder={`Joueur ${index + 1}`}
                 maxLength={14}
-                readOnly={!!player.profileId}
+                readOnly={!!player.profileId || !!player.friendUserId}
                 onChange={(event) => rename(player.id, event.target.value)}
               />
               <button
@@ -188,6 +217,55 @@ export function SetupScreen({ game }: SetupScreenProps) {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {auth.user && (
+          <div className={styles.profilesPick}>
+            <p className={styles.optionLabel}>Comptes (stats partagées)</p>
+            <div className={styles.profileChips}>
+              {(() => {
+                const meId = auth.user.id;
+                const meUsed = players.some((p) => p.friendUserId === meId);
+                const meLabel = social.username ? `@${social.username}` : "Moi";
+                return (
+                  <button
+                    type="button"
+                    className={styles.friendChip}
+                    data-used={meUsed ? "true" : "false"}
+                    disabled={meUsed || players.length >= MAX_PLAYERS}
+                    onClick={() => addFriendSlot(meId, meLabel)}
+                  >
+                    👤 Moi
+                  </button>
+                );
+              })()}
+              {social.friends.map((friend) => {
+                const used = players.some(
+                  (p) => p.friendUserId === friend.userId,
+                );
+                return (
+                  <button
+                    key={friend.friendshipId}
+                    type="button"
+                    className={styles.friendChip}
+                    data-used={used ? "true" : "false"}
+                    disabled={used || players.length >= MAX_PLAYERS}
+                    onClick={() =>
+                      addFriendSlot(friend.userId, `@${friend.username}`)
+                    }
+                  >
+                    👤 @{friend.username}
+                  </button>
+                );
+              })}
+            </div>
+            {social.friends.length === 0 && (
+              <p className={styles.pickHint}>
+                Ajoute des amis (Compte → Mes amis) pour qu&apos;ils retrouvent
+                la partie dans leurs stats.
+              </p>
+            )}
           </div>
         )}
       </section>

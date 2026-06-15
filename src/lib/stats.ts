@@ -3,6 +3,7 @@ import { getSupabase } from "@/lib/supabase";
 
 interface RawRow {
   player_id: string | null;
+  user_id: string | null;
   guest_name: string | null;
   placement: number | null;
   legs_won: number | null;
@@ -23,10 +24,10 @@ export async function fetchStatRows(userId: string): Promise<GameStatRow[]> {
   const { data, error } = await supabase
     .from("game_players")
     .select(
-      "player_id, guest_name, placement, legs_won, darts, points_scored, best_visit, avg3, marks, games(mode, created_at)",
+      "player_id, user_id, guest_name, placement, legs_won, darts, points_scored, best_visit, avg3, marks, games(mode, created_at)",
     )
-    .eq("owner_id", userId)
-    .limit(1000);
+    .or(`owner_id.eq.${userId},user_id.eq.${userId}`)
+    .limit(2000);
 
   if (error || !data) {
     return [];
@@ -36,6 +37,7 @@ export async function fetchStatRows(userId: string): Promise<GameStatRow[]> {
     .filter((row) => row.games !== null)
     .map((row) => ({
       playerId: row.player_id,
+      userId: row.user_id,
       guestName: row.guest_name,
       placement: row.placement ?? 0,
       legsWon: row.legs_won ?? 0,

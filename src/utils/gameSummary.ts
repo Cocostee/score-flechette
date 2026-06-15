@@ -3,6 +3,7 @@ import { liveRanks } from "@/utils/ranking";
 
 export interface GamePlayerSummary {
   profileId: string | null;
+  userId: string | null;
   name: string;
   placement: number;
   legsWon: number;
@@ -37,6 +38,7 @@ export function summarizeGame(state: GameState): GameSummary {
 
     return {
       profileId: player.profileId ?? null,
+      userId: player.friendUserId ?? null,
       name: player.name,
       placement: ranks[player.id] ?? 0,
       legsWon: state.legsWon[player.id] ?? 0,

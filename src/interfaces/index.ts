@@ -24,6 +24,7 @@ export interface Player {
   id: string;
   name: string;
   profileId?: string;
+  friendUserId?: string;
 }
 
 export interface X01PlayerState {
@@ -89,6 +90,7 @@ export interface TrackedPlayer {
 
 export interface GameStatRow {
   playerId: string | null;
+  userId: string | null;
   guestName: string | null;
   placement: number;
   legsWon: number;

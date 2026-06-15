@@ -1,12 +1,21 @@
 import type { GameStatRow, ProfileStats } from "@/interfaces";
 
-/* Aggregates a profile's recorded rows into displayable statistics. */
+export interface StatsMatch {
+  profileId?: string;
+  userId?: string;
+}
+
+/* Aggregates the rows matching a profile or account into statistics. */
 export function computeProfileStats(
   rows: GameStatRow[],
-  profileId: string,
+  match: StatsMatch,
 ): ProfileStats {
   const mine = rows
-    .filter((row) => row.playerId === profileId)
+    .filter((row) =>
+      match.userId
+        ? row.userId === match.userId
+        : row.playerId === match.profileId,
+    )
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 
   const gamesPlayed = mine.length;
