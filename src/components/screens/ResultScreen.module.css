@@ -100,7 +100,7 @@
   border: none;
   border-radius: var(--radius);
   background: linear-gradient(180deg, var(--gold-bright), var(--gold));
-  color: var(--bg-deep);
+  color: var(--ink);
   font-family: var(--font-display), serif;
   font-size: 1.5rem;
   letter-spacing: 0.05em;

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlayers } from "@/hooks/usePlayers";
+import { useTheme, THEMES } from "@/hooks/useTheme";
 import { StatsScreen } from "@/components/stats/StatsScreen";
 import { FriendsScreen } from "@/components/account/FriendsScreen";
 import styles from "./AccountButton.module.css";
@@ -11,6 +12,7 @@ import styles from "./AccountButton.module.css";
 export function AccountButton() {
   const auth = useAuth();
   const players = usePlayers(auth.user?.id ?? null);
+  const [theme, setTheme] = useTheme();
   const [open, setOpen] = useState(false);
   const [signup, setSignup] = useState(false);
   const [email, setEmail] = useState("");
@@ -211,6 +213,23 @@ export function AccountButton() {
                 </button>
               </div>
             )}
+
+            <div className={styles.themeRow}>
+              <span className={styles.themeLabel}>Thème</span>
+              <div className={styles.themes}>
+                {THEMES.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className={styles.themeBtn}
+                    data-on={theme === option.id ? "true" : "false"}
+                    onClick={() => setTheme(option.id)}
+                  >
+                    {option.emoji} {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {message && <p className={styles.message}>{message}</p>}
           </div>

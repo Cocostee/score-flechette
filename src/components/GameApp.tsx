@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useDartsGame } from "@/hooks/useDartsGame";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { useGameRecorder } from "@/hooks/useGameRecorder";
 import { HomeScreen } from "@/components/screens/HomeScreen";
 import { SetupScreen } from "@/components/screens/SetupScreen";
@@ -14,6 +15,7 @@ import styles from "./GameApp.module.css";
 export function GameApp() {
   const game = useDartsGame();
   const { user } = useAuth();
+  useTheme();
   useGameRecorder(game, user?.id ?? null);
 
   useEffect(() => {

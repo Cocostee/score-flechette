@@ -171,7 +171,7 @@
 
 .playerIndex[data-linked="true"] {
   background: linear-gradient(180deg, var(--gold), #b48f38);
-  color: var(--bg-deep);
+  color: var(--ink);
 }
 
 .profilesPick {
@@ -276,7 +276,7 @@
 .segOn {
   border-color: var(--gold);
   background: linear-gradient(180deg, var(--gold), #b48f38);
-  color: var(--bg-deep);
+  color: var(--ink);
   font-weight: 600;
 }
 

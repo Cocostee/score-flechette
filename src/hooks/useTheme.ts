@@ -1,0 +1,33 @@
+"use client";
+
+import { useEffect } from "react";
+import { usePersistedState } from "@/hooks/usePersistedState";
+
+export type Theme = "brown" | "light" | "night";
+
+export const THEMES: { id: Theme; label: string; emoji: string }[] = [
+  { id: "light", label: "Clair", emoji: "☀️" },
+  { id: "brown", label: "Marron", emoji: "🍺" },
+  { id: "night", label: "Nuit", emoji: "🌙" },
+];
+
+const META_COLOR: Record<Theme, string> = {
+  brown: "#141109",
+  night: "#0c0e13",
+  light: "#f4eede",
+};
+
+/* Reads the saved theme and applies it to the document. */
+export function useTheme(): [Theme, (theme: Theme) => void] {
+  const [theme, setTheme] = usePersistedState<Theme>("oche:theme", "brown");
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute("content", META_COLOR[theme] ?? META_COLOR.brown);
+    }
+  }, [theme]);
+
+  return [theme, setTheme];
+}

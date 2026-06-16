@@ -121,7 +121,7 @@
 
 .info:hover {
   background: var(--gold);
-  color: var(--bg-deep);
+  color: var(--ink);
   border-color: var(--gold);
 }
 

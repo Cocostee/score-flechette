@@ -40,7 +40,7 @@
 .numOn {
   border-color: var(--gold);
   background: linear-gradient(180deg, var(--gold-bright), var(--gold));
-  color: var(--bg-deep);
+  color: var(--ink);
   box-shadow: 0 0 0 3px rgba(201, 164, 74, 0.22);
 }
 

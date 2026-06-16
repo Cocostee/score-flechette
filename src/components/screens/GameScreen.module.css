@@ -276,7 +276,7 @@
 .nextReady {
   border-color: transparent;
   background: linear-gradient(180deg, var(--gold-bright), var(--gold));
-  color: var(--bg-deep);
+  color: var(--ink);
   box-shadow: 0 10px 26px -14px rgba(201, 164, 74, 0.8);
 }
 

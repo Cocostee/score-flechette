@@ -77,7 +77,7 @@
 .tab[data-on="true"] {
   border-color: var(--gold);
   background: linear-gradient(180deg, var(--gold), #b48f38);
-  color: var(--bg-deep);
+  color: var(--ink);
 }
 
 .cards {

@@ -61,7 +61,7 @@
 .rank[data-lead="true"] {
   background: linear-gradient(180deg, var(--gold), #b48f38);
   border-color: var(--gold);
-  color: var(--bg-deep);
+  color: var(--ink);
 }
 
 .legs {
