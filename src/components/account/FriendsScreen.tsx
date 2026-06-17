@@ -228,6 +228,7 @@ export function FriendsScreen({ userId, onClose }: FriendsScreenProps) {
 
       {viewFriend && (
         <FriendStatsScreen
+          viewerId={userId}
           friendId={viewFriend.userId}
           username={viewFriend.username}
           avatarUrl={viewFriend.avatarUrl}

@@ -4,9 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import type { GameStatRow, TrackedPlayer } from "@/interfaces";
 import { fetchStatRows } from "@/lib/stats";
 import { computeProfileStats, type StatsMatch } from "@/utils/profileStats";
+import { computeHeadToHead } from "@/utils/headToHead";
 import { useSocial } from "@/hooks/useSocial";
-import { getMode } from "@/data/modes";
-import { AvgChart } from "./AvgChart";
+import { StatsBody } from "./StatsBody";
 import styles from "./StatsScreen.module.css";
 
 interface StatsScreenProps {
@@ -19,17 +19,6 @@ interface StatsTab {
   id: string;
   label: string;
   match: StatsMatch;
-}
-
-/* Formats an ISO date as a short French day label. */
-function shortDate(iso: string): string {
-  if (!iso) {
-    return "";
-  }
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "short",
-  });
 }
 
 /* Tells whether a row belongs to the selected tab's player or account. */
@@ -59,9 +48,26 @@ export function StatsScreen({ userId, profiles, onClose }: StatsScreenProps) {
     };
   }, [userId]);
 
+  const names = useMemo(() => {
+    const map: Record<string, string> = {
+      [userId]: social.username ? `@${social.username}` : "Moi",
+    };
+    for (const profile of profiles) {
+      map[profile.id] = profile.name;
+    }
+    for (const friend of social.friends) {
+      map[friend.userId] = `@${friend.username}`;
+    }
+    return map;
+  }, [userId, social.username, social.friends, profiles]);
+
   const tabs: StatsTab[] = useMemo(
     () => [
-      { id: "me", label: social.username ? `@${social.username}` : "Moi", match: { userId } },
+      {
+        id: "me",
+        label: social.username ? `@${social.username}` : "Moi",
+        match: { userId },
+      },
       ...profiles.map((profile) => ({
         id: profile.id,
         label: profile.name,
@@ -83,6 +89,10 @@ export function StatsScreen({ userId, profiles, onClose }: StatsScreenProps) {
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         .slice(0, 12),
     [rows, activeTab.match],
+  );
+  const headToHead = useMemo(
+    () => computeHeadToHead(rows, activeTab.match, names),
+    [rows, activeTab.match, names],
   );
 
   return (
@@ -117,57 +127,7 @@ export function StatsScreen({ userId, profiles, onClose }: StatsScreenProps) {
           joueur !
         </p>
       ) : (
-        <>
-          <div className={styles.cards}>
-            <div className={styles.card}>
-              <span className={styles.cardValue}>{stats.gamesPlayed}</span>
-              <span className={styles.cardLabel}>Parties</span>
-            </div>
-            <div className={styles.card}>
-              <span className={styles.cardValue}>
-                {stats.wins}
-                <span className={styles.cardPct}>· {stats.winRate}%</span>
-              </span>
-              <span className={styles.cardLabel}>Victoires</span>
-            </div>
-            <div className={styles.card}>
-              <span className={styles.cardValue}>{stats.bestAvg}</span>
-              <span className={styles.cardLabel}>Meilleure moy.</span>
-            </div>
-            <div className={styles.card}>
-              <span className={styles.cardValue}>{stats.bestVisit}</span>
-              <span className={styles.cardLabel}>Meilleur tour</span>
-            </div>
-          </div>
-
-          <section className={styles.block}>
-            <h2 className={styles.blockTitle}>Moyenne /3 dans le temps</h2>
-            <AvgChart series={stats.series} />
-          </section>
-
-          <section className={styles.block}>
-            <h2 className={styles.blockTitle}>Historique</h2>
-            <div className={styles.history}>
-              {history.map((row, index) => (
-                <div key={index} className={styles.historyRow}>
-                  <span className={styles.histDate}>
-                    {shortDate(row.createdAt)}
-                  </span>
-                  <span className={styles.histMode}>
-                    {getMode(row.mode).name}
-                  </span>
-                  <span
-                    className={styles.histPlace}
-                    data-win={row.placement === 1 ? "true" : "false"}
-                  >
-                    {row.placement === 1 ? "Gagné" : `${row.placement}e`}
-                  </span>
-                  <span className={styles.histAvg}>{row.avg3}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-        </>
+        <StatsBody stats={stats} history={history} headToHead={headToHead} />
       )}
     </div>
   );

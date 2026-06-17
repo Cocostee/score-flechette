@@ -1,53 +1,49 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import type { GameStatRow } from "@/interfaces";
-import { fetchFriendStatRows } from "@/lib/stats";
+import { fetchFriendStatRows, fetchStatRows } from "@/lib/stats";
 import { computeProfileStats } from "@/utils/profileStats";
-import { getMode } from "@/data/modes";
-import { AvgChart } from "./AvgChart";
+import { computeHeadToHead } from "@/utils/headToHead";
+import { StatsBody } from "./StatsBody";
 import styles from "./StatsScreen.module.css";
 
 interface FriendStatsScreenProps {
+  viewerId: string;
   friendId: string;
   username: string;
   avatarUrl: string | null;
   onClose: () => void;
 }
 
-/* Formats an ISO date as a short French day label. */
-function shortDate(iso: string): string {
-  if (!iso) {
-    return "";
-  }
-  return new Date(iso).toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "short",
-  });
-}
-
 /* Read-only statistics view for an accepted friend's account. */
 export function FriendStatsScreen({
+  viewerId,
   friendId,
   username,
   avatarUrl,
   onClose,
 }: FriendStatsScreenProps) {
   const [rows, setRows] = useState<GameStatRow[]>([]);
+  const [myRows, setMyRows] = useState<GameStatRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
-    fetchFriendStatRows(friendId).then((data) => {
-      if (active) {
-        setRows(data);
-        setLoading(false);
-      }
-    });
+    Promise.all([fetchFriendStatRows(friendId), fetchStatRows(viewerId)]).then(
+      ([friendData, mine]) => {
+        if (active) {
+          setRows(friendData);
+          setMyRows(mine);
+          setLoading(false);
+        }
+      },
+    );
     return () => {
       active = false;
     };
-  }, [friendId]);
+  }, [friendId, viewerId]);
 
   const stats = useMemo(
     () => computeProfileStats(rows, { userId: friendId }),
@@ -60,8 +56,16 @@ export function FriendStatsScreen({
         .slice(0, 12),
     [rows],
   );
+  const versus = useMemo(() => {
+    const h2h = computeHeadToHead(myRows, { userId: viewerId }, {});
+    return h2h.find((entry) => entry.key === `u:${friendId}`) ?? null;
+  }, [myRows, viewerId, friendId]);
 
-  return (
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  return createPortal(
     <div className={styles.screen}>
       <header className={styles.top}>
         <button type="button" className={styles.back} onClick={onClose}>
@@ -83,6 +87,17 @@ export function FriendStatsScreen({
         <span className={styles.profileName}>@{username}</span>
       </div>
 
+      {versus && versus.games > 0 && (
+        <div className={styles.versus}>
+          <span className={styles.versusLabel}>Face à face (toi)</span>
+          <span className={styles.versusRecord}>
+            <span className={styles.wlWinTxt}>{versus.wins}V</span>
+            {" - "}
+            <span className={styles.wlLossTxt}>{versus.losses}D</span>
+          </span>
+        </div>
+      )}
+
       {loading ? (
         <p className={styles.empty}>Chargement…</p>
       ) : stats.gamesPlayed === 0 ? (
@@ -90,58 +105,9 @@ export function FriendStatsScreen({
           Aucune partie partagée enregistrée avec ce joueur pour l&apos;instant.
         </p>
       ) : (
-        <>
-          <div className={styles.cards}>
-            <div className={styles.card}>
-              <span className={styles.cardValue}>{stats.gamesPlayed}</span>
-              <span className={styles.cardLabel}>Parties</span>
-            </div>
-            <div className={styles.card}>
-              <span className={styles.cardValue}>
-                {stats.wins}
-                <span className={styles.cardPct}>· {stats.winRate}%</span>
-              </span>
-              <span className={styles.cardLabel}>Victoires</span>
-            </div>
-            <div className={styles.card}>
-              <span className={styles.cardValue}>{stats.bestAvg}</span>
-              <span className={styles.cardLabel}>Meilleure moy.</span>
-            </div>
-            <div className={styles.card}>
-              <span className={styles.cardValue}>{stats.bestVisit}</span>
-              <span className={styles.cardLabel}>Meilleur tour</span>
-            </div>
-          </div>
-
-          <section className={styles.block}>
-            <h2 className={styles.blockTitle}>Moyenne /3 dans le temps</h2>
-            <AvgChart series={stats.series} />
-          </section>
-
-          <section className={styles.block}>
-            <h2 className={styles.blockTitle}>Historique</h2>
-            <div className={styles.history}>
-              {history.map((row, index) => (
-                <div key={index} className={styles.historyRow}>
-                  <span className={styles.histDate}>
-                    {shortDate(row.createdAt)}
-                  </span>
-                  <span className={styles.histMode}>
-                    {getMode(row.mode).name}
-                  </span>
-                  <span
-                    className={styles.histPlace}
-                    data-win={row.placement === 1 ? "true" : "false"}
-                  >
-                    {row.placement === 1 ? "Gagné" : `${row.placement}e`}
-                  </span>
-                  <span className={styles.histAvg}>{row.avg3}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-        </>
+        <StatsBody stats={stats} history={history} />
       )}
-    </div>
+    </div>,
+    document.body,
   );
 }

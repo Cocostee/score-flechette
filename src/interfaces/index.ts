@@ -89,6 +89,7 @@ export interface TrackedPlayer {
 }
 
 export interface GameStatRow {
+  gameId: string;
   playerId: string | null;
   userId: string | null;
   guestName: string | null;
@@ -106,9 +107,23 @@ export interface GameStatRow {
 export interface ProfileStats {
   gamesPlayed: number;
   wins: number;
+  losses: number;
   winRate: number;
   bestVisit: number;
   bestAvg: number;
-  avgByMode: Record<string, number>;
+  avgThreeDart: number;
+  ppd: number;
+  mpr: number;
+  x01Count: number;
+  cricketCount: number;
+  modeCounts: Record<string, number>;
   series: { date: string; avg3: number; mode: GameMode; won: boolean }[];
+}
+
+export interface HeadToHead {
+  key: string;
+  name: string;
+  wins: number;
+  losses: number;
+  games: number;
 }

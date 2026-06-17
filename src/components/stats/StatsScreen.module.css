@@ -188,6 +188,126 @@
   line-height: 1.4;
 }
 
+.wlBar {
+  display: flex;
+  height: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-deep);
+  border: 1px solid var(--line);
+}
+
+.wlWin {
+  background: var(--green);
+  transition: width 0.4s ease;
+}
+
+.wlLoss {
+  background: var(--red);
+  transition: width 0.4s ease;
+}
+
+.wlLegend {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 0.85rem;
+}
+
+.wlWinTxt {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.wlLossTxt {
+  color: var(--red);
+  font-weight: 700;
+}
+
+.modeList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modeRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modeName {
+  width: 96px;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  color: var(--chalk-dim);
+}
+
+.modeTrack {
+  flex: 1;
+  height: 10px;
+  border-radius: 6px;
+  background: var(--bg-deep);
+  overflow: hidden;
+}
+
+.modeFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--gold-bright));
+  transition: width 0.4s ease;
+}
+
+.modeCount {
+  width: 24px;
+  text-align: right;
+  font-family: var(--font-display), serif;
+  font-size: 1.1rem;
+  color: var(--chalk);
+}
+
+.rivalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: var(--bg-deep);
+  border: 1px solid var(--line);
+}
+
+.rivalName {
+  font-size: 0.96rem;
+  color: var(--chalk);
+}
+
+.rivalRecord {
+  font-size: 0.95rem;
+}
+
+.versus {
+  max-width: 640px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-strong);
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+}
+
+.versusLabel {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--chalk-dim);
+}
+
+.versusRecord {
+  font-family: var(--font-display), serif;
+  font-size: 1.5rem;
+}
+
 .history {
   display: flex;
   flex-direction: column;

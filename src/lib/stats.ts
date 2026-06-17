@@ -2,6 +2,7 @@ import type { GameMode, GameStatRow } from "@/interfaces";
 import { getSupabase } from "@/lib/supabase";
 
 interface RawRow {
+  game_id: string;
   player_id: string | null;
   user_id: string | null;
   guest_name: string | null;
@@ -24,7 +25,7 @@ export async function fetchStatRows(userId: string): Promise<GameStatRow[]> {
   const { data, error } = await supabase
     .from("game_players")
     .select(
-      "player_id, user_id, guest_name, placement, legs_won, darts, points_scored, best_visit, avg3, marks, games(mode, created_at)",
+      "game_id, player_id, user_id, guest_name, placement, legs_won, darts, points_scored, best_visit, avg3, marks, games(mode, created_at)",
     )
     .or(`owner_id.eq.${userId},user_id.eq.${userId}`)
     .limit(2000);
@@ -36,6 +37,7 @@ export async function fetchStatRows(userId: string): Promise<GameStatRow[]> {
   return (data as unknown as RawRow[])
     .filter((row) => row.games !== null)
     .map((row) => ({
+      gameId: row.game_id,
       playerId: row.player_id,
       userId: row.user_id,
       guestName: row.guest_name,
@@ -76,6 +78,7 @@ export async function fetchFriendStatRows(
     return [];
   }
   return (data as FriendStatRpcRow[]).map((row) => ({
+    gameId: "",
     playerId: null,
     userId: targetId,
     guestName: null,
