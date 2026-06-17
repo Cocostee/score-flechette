@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import type { FriendInfo } from "@/lib/social";
 import { useSocial } from "@/hooks/useSocial";
+import { FriendStatsScreen } from "@/components/stats/FriendStatsScreen";
 import styles from "./FriendsScreen.module.css";
 
 interface FriendsScreenProps {
@@ -16,6 +18,19 @@ export function FriendsScreen({ userId, onClose }: FriendsScreenProps) {
   const [friendDraft, setFriendDraft] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [viewFriend, setViewFriend] = useState<FriendInfo | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const onPickAvatar = async (file: File | undefined) => {
+    if (!file) {
+      return;
+    }
+    setBusy(true);
+    setMessage(null);
+    const error = await social.saveAvatar(file);
+    setMessage(error ?? "Photo mise à jour ✓");
+    setBusy(false);
+  };
 
   const saveName = async () => {
     setBusy(true);
@@ -74,7 +89,38 @@ export function FriendsScreen({ userId, onClose }: FriendsScreenProps) {
         </section>
       ) : (
         <>
-          <p className={styles.handle}>@{social.username}</p>
+          <div className={styles.identity}>
+            <span className={styles.avatar}>
+              {social.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={social.avatarUrl}
+                  alt="avatar"
+                  className={styles.avatarImg}
+                />
+              ) : (
+                social.username.slice(0, 1).toUpperCase()
+              )}
+            </span>
+            <div className={styles.identityText}>
+              <span className={styles.handle}>@{social.username}</span>
+              <button
+                type="button"
+                className={styles.photoBtn}
+                disabled={busy}
+                onClick={() => fileRef.current?.click()}
+              >
+                Changer la photo
+              </button>
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(event) => onPickAvatar(event.target.files?.[0])}
+            />
+          </div>
 
           <section className={styles.block}>
             <h2 className={styles.blockTitle}>Ajouter un ami</h2>
@@ -143,7 +189,26 @@ export function FriendsScreen({ userId, onClose }: FriendsScreenProps) {
               )}
               {social.friends.map((friend) => (
                 <div key={friend.friendshipId} className={styles.friendRow}>
-                  <span className={styles.friendName}>@{friend.username}</span>
+                  <button
+                    type="button"
+                    className={styles.friendOpen}
+                    onClick={() => setViewFriend(friend)}
+                  >
+                    <span className={styles.miniAvatar}>
+                      {friend.avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={friend.avatarUrl}
+                          alt={friend.username}
+                          className={styles.avatarImg}
+                        />
+                      ) : (
+                        friend.username.slice(0, 1).toUpperCase()
+                      )}
+                    </span>
+                    <span className={styles.friendName}>@{friend.username}</span>
+                    <span className={styles.chevron}>›</span>
+                  </button>
                   <button
                     type="button"
                     className={styles.decline}
@@ -160,6 +225,15 @@ export function FriendsScreen({ userId, onClose }: FriendsScreenProps) {
       )}
 
       {message && <p className={styles.message}>{message}</p>}
+
+      {viewFriend && (
+        <FriendStatsScreen
+          friendId={viewFriend.userId}
+          username={viewFriend.username}
+          avatarUrl={viewFriend.avatarUrl}
+          onClose={() => setViewFriend(null)}
+        />
+      )}
     </div>
   );
 }

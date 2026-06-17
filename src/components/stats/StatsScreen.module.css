@@ -55,6 +55,42 @@
   line-height: 1.5;
 }
 
+.profileHead {
+  max-width: 640px;
+  margin: 0 auto 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.bigAvatar {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--gold), #b48f38);
+  color: var(--ink);
+  font-family: var(--font-display), serif;
+  font-size: 2rem;
+  border: 2px solid var(--gold);
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profileName {
+  font-family: var(--font-display), serif;
+  font-size: 2rem;
+  color: var(--chalk);
+  letter-spacing: 0.03em;
+}
+
 .tabs {
   display: flex;
   flex-wrap: wrap;

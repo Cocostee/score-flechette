@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlayers } from "@/hooks/usePlayers";
+import { useSocial } from "@/hooks/useSocial";
 import { useTheme, THEMES } from "@/hooks/useTheme";
 import { StatsScreen } from "@/components/stats/StatsScreen";
 import { FriendsScreen } from "@/components/account/FriendsScreen";
@@ -12,6 +13,7 @@ import styles from "./AccountButton.module.css";
 export function AccountButton() {
   const auth = useAuth();
   const players = usePlayers(auth.user?.id ?? null);
+  const social = useSocial(auth.user?.id ?? null);
   const [theme, setTheme] = useTheme();
   const [open, setOpen] = useState(false);
   const [signup, setSignup] = useState(false);
@@ -71,7 +73,22 @@ export function AccountButton() {
         onClick={() => setOpen(true)}
         aria-label="Compte"
       >
-        {auth.user ? <span className={styles.avatar}>{label}</span> : "👤 Compte"}
+        {auth.user ? (
+          <span className={styles.avatar}>
+            {social.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={social.avatarUrl}
+                alt="avatar"
+                className={styles.avatarImg}
+              />
+            ) : (
+              label
+            )}
+          </span>
+        ) : (
+          "👤 Compte"
+        )}
       </button>
 
       {open && (

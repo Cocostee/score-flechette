@@ -4,12 +4,19 @@ export interface FriendInfo {
   friendshipId: string;
   userId: string;
   username: string;
+  avatarUrl: string | null;
 }
 
 export interface IncomingRequest {
   friendshipId: string;
   userId: string;
   username: string;
+  avatarUrl: string | null;
+}
+
+export interface MyProfile {
+  username: string | null;
+  avatarUrl: string | null;
 }
 
 interface FriendshipRow {
@@ -19,18 +26,56 @@ interface FriendshipRow {
   status: string;
 }
 
-/* Reads the signed-in account's public username, or null when unset. */
-export async function getMyUsername(userId: string): Promise<string | null> {
+/* Reads the signed-in account's username and avatar. */
+export async function getMyProfile(userId: string): Promise<MyProfile> {
   const supabase = getSupabase();
   if (!supabase) {
-    return null;
+    return { username: null, avatarUrl: null };
   }
-  const { data } = await supabase
+  const primary = await supabase
     .from("profiles")
-    .select("username")
+    .select("username, avatar_url")
     .eq("id", userId)
     .maybeSingle();
-  return (data?.username as string | undefined) ?? null;
+  const fallback = primary.error
+    ? await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", userId)
+        .maybeSingle()
+    : null;
+  const data = (fallback ? fallback.data : primary.data) as
+    | { username?: string; avatar_url?: string }
+    | null;
+  return {
+    username: data?.username ?? null,
+    avatarUrl: data?.avatar_url ?? null,
+  };
+}
+
+/* Uploads a new avatar image and stores its public URL on the profile. */
+export async function uploadAvatar(
+  userId: string,
+  file: File,
+): Promise<string | null> {
+  const supabase = getSupabase();
+  if (!supabase) {
+    return "Service indisponible";
+  }
+  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  const path = `${userId}/avatar-${Date.now()}.${ext}`;
+  const up = await supabase.storage
+    .from("avatars")
+    .upload(path, file, { upsert: true, cacheControl: "3600" });
+  if (up.error) {
+    return up.error.message;
+  }
+  const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_url: data.publicUrl })
+    .eq("id", userId);
+  return error ? error.message : null;
 }
 
 /* Creates or updates the account's public username; returns an error message. */
@@ -61,7 +106,7 @@ export async function setUsername(
 async function withUsernames(
   rows: FriendshipRow[],
   myId: string,
-): Promise<{ friendshipId: string; userId: string; username: string }[]> {
+): Promise<FriendInfo[]> {
   const supabase = getSupabase();
   if (!supabase || rows.length === 0) {
     return [];
@@ -69,20 +114,34 @@ async function withUsernames(
   const otherIds = rows.map((row) =>
     row.requester_id === myId ? row.addressee_id : row.requester_id,
   );
-  const { data } = await supabase
+  const primary = await supabase
     .from("profiles")
-    .select("id, username")
+    .select("id, username, avatar_url")
     .in("id", otherIds);
-  const names = new Map(
-    (data ?? []).map((p) => [p.id as string, p.username as string]),
+  const fallback = primary.error
+    ? await supabase.from("profiles").select("id, username").in("id", otherIds)
+    : null;
+  const data = (fallback ? fallback.data : primary.data) as
+    | { id: string; username: string; avatar_url?: string }[]
+    | null;
+  const profiles = new Map(
+    (data ?? []).map((p) => [
+      p.id as string,
+      {
+        username: p.username as string,
+        avatarUrl: (p.avatar_url as string | null) ?? null,
+      },
+    ]),
   );
   return rows.map((row) => {
     const otherId =
       row.requester_id === myId ? row.addressee_id : row.requester_id;
+    const profile = profiles.get(otherId);
     return {
       friendshipId: row.id,
       userId: otherId,
-      username: names.get(otherId) ?? "?",
+      username: profile?.username ?? "?",
+      avatarUrl: profile?.avatarUrl ?? null,
     };
   });
 }

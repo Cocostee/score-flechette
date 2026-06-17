@@ -50,3 +50,43 @@ export async function fetchStatRows(userId: string): Promise<GameStatRow[]> {
       createdAt: row.games?.created_at ?? "",
     }));
 }
+
+interface FriendStatRpcRow {
+  placement: number | null;
+  avg3: number | null;
+  points_scored: number | null;
+  best_visit: number | null;
+  marks: number | null;
+  mode: string;
+  created_at: string;
+}
+
+/* Fetches a friend's recorded games via the secured RPC (accepted friends only). */
+export async function fetchFriendStatRows(
+  targetId: string,
+): Promise<GameStatRow[]> {
+  const supabase = getSupabase();
+  if (!supabase) {
+    return [];
+  }
+  const { data, error } = await supabase.rpc("friend_stat_rows", {
+    target: targetId,
+  });
+  if (error || !data) {
+    return [];
+  }
+  return (data as FriendStatRpcRow[]).map((row) => ({
+    playerId: null,
+    userId: targetId,
+    guestName: null,
+    placement: row.placement ?? 0,
+    legsWon: 0,
+    darts: 0,
+    pointsScored: row.points_scored ?? 0,
+    bestVisit: row.best_visit ?? 0,
+    avg3: row.avg3 ?? 0,
+    marks: row.marks ?? 0,
+    mode: (row.mode ?? "x01") as GameMode,
+    createdAt: row.created_at ?? "",
+  }));
+}

@@ -28,10 +28,17 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
+  overflow: hidden;
   background: linear-gradient(180deg, var(--gold), #b48f38);
   color: var(--ink);
   font-family: var(--font-display), serif;
   font-size: 1.1rem;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .backdrop {

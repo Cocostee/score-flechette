@@ -47,13 +47,92 @@
   width: 92px;
 }
 
-.handle {
+.identity {
   max-width: 560px;
   margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.avatar {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--gold), #b48f38);
+  color: var(--ink);
   font-family: var(--font-display), serif;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
+  border: 2px solid var(--gold);
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.identityText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.handle {
+  font-family: var(--font-display), serif;
+  font-size: 1.6rem;
   color: var(--gold-bright);
   letter-spacing: 0.03em;
+}
+
+.photoBtn {
+  align-self: flex-start;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--chalk-dim);
+  font-size: 0.84rem;
+  text-decoration: underline;
+}
+
+.photoBtn:hover:not(:disabled) {
+  color: var(--chalk);
+}
+
+.friendOpen {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  text-align: left;
+}
+
+.miniAvatar {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--gold), #b48f38);
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.chevron {
+  margin-left: auto;
+  color: var(--chalk-faint);
+  font-size: 1.3rem;
 }
 
 .block {
