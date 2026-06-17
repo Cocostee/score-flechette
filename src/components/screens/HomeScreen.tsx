@@ -19,17 +19,16 @@ export function HomeScreen({ game }: HomeScreenProps) {
 
   return (
     <div className={styles.screen}>
-      <div className={styles.topBar}>
-        <AccountButton />
-      </div>
-
       <header className={styles.hero}>
         <p className={styles.kicker}>Compteur de fléchettes · hors-ligne</p>
-        <h1 className={styles.title}>
-          Sur la
-          <br />
-          <span className={styles.titleAccent}>Ligne</span>
-        </h1>
+        <div className={styles.titleRow}>
+          <h1 className={styles.title}>
+            Sur la
+            <br />
+            <span className={styles.titleAccent}>Ligne</span>
+          </h1>
+          <AccountButton />
+        </div>
         <p className={styles.subtitle}>
           Choisis ton jeu, ajoute les joueurs, et laisse l&apos;ardoise compter.
         </p>
