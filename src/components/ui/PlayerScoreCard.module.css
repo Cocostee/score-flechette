@@ -183,6 +183,50 @@
   color: var(--chalk);
 }
 
+.atcWrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 0 4px;
+}
+
+.atcTarget {
+  font-family: var(--font-display), serif;
+  font-size: clamp(3rem, 12vw, 4rem);
+  line-height: 0.9;
+  color: var(--chalk);
+  flex-shrink: 0;
+  min-width: 56px;
+}
+
+.atcMeta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.atcFraction {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--chalk-dim);
+}
+
+.atcBar {
+  width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.atcBarFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-bright));
+  transition: width 0.3s ease;
+}
+
 .stats {
   display: flex;
   gap: 8px;

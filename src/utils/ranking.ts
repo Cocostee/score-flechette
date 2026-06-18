@@ -1,5 +1,6 @@
 import type { GameState } from "@/interfaces";
 import { allClosed } from "@/utils/cricket";
+import { atcProgress } from "@/utils/aroundClock";
 
 /* Scores a player for ranking; higher is better in every mode. */
 function metric(state: GameState, playerId: string): number {
@@ -9,6 +10,9 @@ function metric(state: GameState, playerId: string): number {
   const ps = state.states[playerId];
   if (ps.kind === "x01") {
     return -ps.score;
+  }
+  if (ps.kind === "aroundclock") {
+    return atcProgress(ps);
   }
   const closedBonus = allClosed(ps) ? 1000 : 0;
   return state.mode === "cutthroat"

@@ -2,6 +2,17 @@ import type { GameMode, ModeInfo } from "@/interfaces";
 
 export const MODES: ModeInfo[] = [
   {
+    mode: "aroundclock",
+    name: "Autour de l'horloge",
+    tagline: "1 à 20, puis la Bulle",
+    rules: [
+      "Chaque joueur doit toucher les numéros dans l'ordre : 1, 2, 3, ..., 20, puis la Bulle.",
+      "N'importe quelle zone du numéro compte (Simple, Double ou Triple) — les multiplicateurs n'avancent pas plus vite.",
+      "Si tu touches ta cible, tu avances au suivant — tu peux enchaîner plusieurs numéros en un seul tour.",
+      "Le premier joueur à toucher la Bulle remporte la partie.",
+    ],
+  },
+  {
     mode: "x01",
     name: "301 / 501",
     tagline: "Tomber pile à zéro",

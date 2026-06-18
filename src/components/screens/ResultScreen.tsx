@@ -1,9 +1,11 @@
 "use client";
 
-import type { Player, X01PlayerState } from "@/interfaces";
+import { useState } from "react";
+import type { Player } from "@/interfaces";
 import type { DartsGame } from "@/hooks/useDartsGame";
 import { getMode } from "@/data/modes";
 import { allClosed } from "@/utils/cricket";
+import { atcProgress, ATC_SEQUENCE } from "@/utils/aroundClock";
 import { IconTrophy } from "@/components/ui/icons";
 import styles from "./ResultScreen.module.css";
 
@@ -11,7 +13,7 @@ interface ResultScreenProps {
   game: DartsGame;
 }
 
-/* Orders players from best to worst. */
+/* Orders players from best to worst for the final podium. */
 function rankPlayers(game: DartsGame): Player[] {
   const { state } = game;
   const others = state.players.filter((p) => p.id !== state.winnerId);
@@ -26,6 +28,9 @@ function rankPlayers(game: DartsGame): Player[] {
     if (sa.kind === "x01" && sb.kind === "x01") {
       return sa.score - sb.score;
     }
+    if (sa.kind === "aroundclock" && sb.kind === "aroundclock") {
+      return atcProgress(sb) - atcProgress(sa);
+    }
     if (sa.kind === "cricket" && sb.kind === "cricket") {
       return state.mode === "cutthroat"
         ? sa.score - sb.score
@@ -38,18 +43,17 @@ function rankPlayers(game: DartsGame): Player[] {
 }
 
 const MEDALS = ["Or", "Argent", "Bronze"];
-
 const PLACE_LABELS = ["1er", "2e", "3e", "4e", "5e", "6e"];
 
-/* Computes the 3-dart average for a player at the end of the game. */
+/* Computes the 3-dart average for a player from accumulated totalStats. */
 function computeAvg(game: DartsGame, player: Player): number {
   const { state } = game;
-  const ps = state.states[player.id];
-  const pStats = state.stats[player.id];
+  const pStats = state.totalStats[player.id];
   if (!pStats || pStats.darts === 0) return 0;
-  if (ps.kind === "x01") {
-    const pointsScored = state.rules.startScore - ps.score;
-    return (pointsScored / pStats.darts) * 3;
+  if (state.mode === "x01") {
+    return pStats.pointsScored > 0
+      ? (pStats.pointsScored / pStats.darts) * 3
+      : 0;
   }
   return (pStats.marks / pStats.darts) * 3;
 }
@@ -64,8 +68,9 @@ interface PlayerResultCardProps {
 function PlayerResultCard({ player, game, rank }: PlayerResultCardProps) {
   const { state } = game;
   const ps = state.states[player.id];
-  const pStats = state.stats[player.id];
-  const isCricket = state.mode !== "x01";
+  const pStats = state.totalStats[player.id];
+  const isCricket = state.mode === "cricket" || state.mode === "cutthroat";
+  const isATC = state.mode === "aroundclock";
   const avg = computeAvg(game, player);
   const medal = MEDALS[rank - 1];
   const isWinner = rank === 1;
@@ -78,9 +83,19 @@ function PlayerResultCard({ player, game, rank }: PlayerResultCardProps) {
     if (ps.kind === "x01") {
       return ps.score === 0 ? "Checkout !" : `${ps.score} restants`;
     }
+    if (ps.kind === "aroundclock") {
+      return ps.target === 0
+        ? "Tour complet !"
+        : `Cible ${ps.target} (${atcProgress(ps)}/${ATC_SEQUENCE.length})`;
+    }
     const closed = allClosed(ps);
     return `${ps.score} pts${closed ? " · fermé" : ""}`;
   })();
+
+  const checkoutPct =
+    !isCricket && !isATC && pStats && pStats.checkoutAttempts > 0
+      ? Math.round((pStats.checkoutHits / pStats.checkoutAttempts) * 100)
+      : null;
 
   return (
     <div
@@ -99,11 +114,9 @@ function PlayerResultCard({ player, game, rank }: PlayerResultCardProps) {
       {pStats && pStats.darts > 0 && (
         <div className={styles.playerStats}>
           <div className={styles.playerStat}>
-            <span className={styles.playerStatVal}>
-              {avg.toFixed(1)}
-            </span>
+            <span className={styles.playerStatVal}>{avg.toFixed(1)}</span>
             <span className={styles.playerStatLabel}>
-              {isCricket ? "MPR" : "Moy /3"}
+              {isATC ? "H/T" : isCricket ? "MPR" : "Moy /3"}
             </span>
           </div>
           <div className={styles.playerStat}>
@@ -114,20 +127,43 @@ function PlayerResultCard({ player, game, rank }: PlayerResultCardProps) {
             <span className={styles.playerStatVal}>{pStats.darts}</span>
             <span className={styles.playerStatLabel}>Fléch.</span>
           </div>
-          {!isCricket && (
+          {!isCricket && !isATC && (
             <div className={styles.playerStat}>
               <span className={styles.playerStatVal}>
-                {pStats.oneEighties > 0
-                  ? pStats.oneEighties
-                  : pStats.tonPlus > 0
-                    ? pStats.tonPlus
-                    : "—"}
+                {checkoutPct !== null
+                  ? `${checkoutPct}%`
+                  : pStats.oneEighties > 0
+                    ? pStats.oneEighties
+                    : pStats.tonPlus > 0
+                      ? pStats.tonPlus
+                      : "—"}
               </span>
               <span className={styles.playerStatLabel}>
-                {pStats.oneEighties > 0 ? "180s" : "Ton+"}
+                {checkoutPct !== null
+                  ? "Checkout"
+                  : pStats.oneEighties > 0
+                    ? "180s"
+                    : "Ton+"}
               </span>
             </div>
           )}
+          {isATC && (
+            <div className={styles.playerStat}>
+              <span className={styles.playerStatVal}>
+                {atcProgress(ps.kind === "aroundclock" ? ps : { kind: "aroundclock", target: 1 })}
+              </span>
+              <span className={styles.playerStatLabel}>Cibles</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!isCricket && !isATC && pStats && pStats.oneEighties > 0 && checkoutPct !== null && (
+        <div className={styles.bonusLine}>
+          {pStats.oneEighties} × 180
+          {pStats.tonPlus > pStats.oneEighties
+            ? ` · ${pStats.tonPlus - pStats.oneEighties} ton+`
+            : ""}
         </div>
       )}
     </div>
@@ -141,6 +177,36 @@ export function ResultScreen({ game }: ResultScreenProps) {
   const ranking = rankPlayers(game);
   const winner = ranking[0];
   const multiLeg = state.legsTarget > 1;
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    const lines = ranking.map((p, i) => {
+      const pStats = state.totalStats[p.id];
+      const avg = computeAvg(game, p);
+      const darts = pStats?.darts ?? 0;
+      return `${PLACE_LABELS[i] ?? `${i + 1}e`} ${p.name} — Moy/3: ${avg.toFixed(1)}, ${darts} fléch.`;
+    });
+    const text = [
+      `🎯 Sur la Ligne · ${info.name}`,
+      multiLeg ? `${state.legsTarget} manches` : "",
+      "",
+      ...lines,
+    ]
+      .filter((l) => l !== "")
+      .join("\n");
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Sur la Ligne", text });
+      } else {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    } catch {
+      // user cancelled
+    }
+  };
 
   return (
     <div className={styles.screen}>
@@ -148,16 +214,16 @@ export function ResultScreen({ game }: ResultScreenProps) {
         <div className={styles.trophyWrap}>
           <IconTrophy style={{ fontSize: "2.4rem", color: "var(--gold-bright)" }} />
         </div>
-        <p className={styles.kicker}>{info.name}{multiLeg ? ` · ${state.legsTarget} manches` : ""}</p>
+        <p className={styles.kicker}>
+          {info.name}
+          {multiLeg ? ` · ${state.legsTarget} manches` : ""}
+        </p>
         <h1 className={styles.winner}>{winner?.name}</h1>
         <p className={styles.winnerSub}>remporte la partie</p>
       </header>
 
       <section className={styles.breakdown}>
-        <h2 className={styles.breakdownTitle}>
-          Résultats
-          {multiLeg && <span className={styles.legNote}> (dernier leg)</span>}
-        </h2>
+        <h2 className={styles.breakdownTitle}>Résultats</h2>
         <div className={styles.playerCards}>
           {ranking.map((player, index) => (
             <PlayerResultCard
@@ -178,6 +244,10 @@ export function ResultScreen({ game }: ResultScreenProps) {
           Accueil
         </button>
       </div>
+
+      <button type="button" className={styles.share} onClick={handleShare}>
+        {copied ? "Copié !" : "Partager"}
+      </button>
     </div>
   );
 }

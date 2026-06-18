@@ -22,6 +22,7 @@ interface DartBoardProps {
   disabled: boolean;
   cricket?: CricketOverlay;
   darts?: DartThrow[];
+  atcTarget?: number;
 }
 
 const CX = 210;
@@ -37,6 +38,7 @@ export function DartBoard({
   disabled,
   cricket,
   darts = [],
+  atcTarget,
 }: DartBoardProps) {
   const zones = useMemo(() => buildBoardZones(CX, CY, R), []);
   const [flashKey, setFlashKey] = useState<string | null>(null);
@@ -122,6 +124,7 @@ export function DartBoard({
               data-ring={zone.ring}
               data-state={state}
               data-flash={flashKey === zone.key ? "true" : undefined}
+              data-atctarget={atcTarget !== undefined && atcTarget > 0 && zone.number === atcTarget ? "true" : undefined}
               onClick={() => { onThrow(zone.segment, zone.multiplier); flash(zone.key); }}
             >
               <title>
@@ -158,6 +161,7 @@ export function DartBoard({
         className={styles.bullOuter}
         data-state={bullState}
         data-flash={flashKey === "bull25" ? "true" : undefined}
+        data-atctarget={atcTarget === 25 ? "true" : undefined}
         onClick={() => { onThrow(25, 1); flash("bull25"); }}
       >
         <title>Bulle extérieure · 25</title>
@@ -169,6 +173,7 @@ export function DartBoard({
         className={styles.bullInner}
         data-state={bullState}
         data-flash={flashKey === "bull50" ? "true" : undefined}
+        data-atctarget={atcTarget === 25 ? "true" : undefined}
         onClick={() => { onThrow(50, 1); flash("bull50"); }}
       >
         <title>Bulle centrale · 50</title>

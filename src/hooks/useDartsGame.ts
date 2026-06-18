@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useReducer, useRef } from "react";
 import type {
+  AroundClockPlayerState,
   CricketPlayerState,
   DartThrow,
   GameConfig,
@@ -20,6 +21,12 @@ import {
   createCricketState,
   dartMarks,
 } from "@/utils/cricket";
+import {
+  ATC_SEQUENCE,
+  applyAroundClockDart,
+  atcProgress,
+  createAroundClockState,
+} from "@/utils/aroundClock";
 import { clearGame, loadGame, saveGame } from "@/utils/storage";
 
 type Action =
@@ -36,36 +43,53 @@ type Action =
   | { type: "MARK_RECORDED" }
   | { type: "HYDRATE"; state: GameState };
 
-const DEFAULT_STATE: GameState = {
-  screen: "home",
-  mode: "x01",
-  rules: { startScore: 501, inOption: "open", outOption: "double" },
-  players: [],
-  states: {},
-  currentIndex: 0,
-  darts: [],
-  turnSnapshot: null,
-  turnOver: false,
-  bust: false,
-  winnerId: null,
-  round: 1,
-  stats: {},
-  legsTarget: 1,
-  legsWon: {},
-  startIndex: 0,
-  recorded: false,
-  past: [],
-};
+function emptyStats(): PlayerStats {
+  return {
+    darts: 0,
+    bestVisit: 0,
+    lastVisit: 0,
+    marks: 0,
+    tonPlus: 0,
+    oneEighties: 0,
+    checkoutAttempts: 0,
+    checkoutHits: 0,
+    pointsScored: 0,
+  };
+}
 
-const HISTORY_CAP = 80;
-
-/* Builds fresh per-player stats for a new leg. */
+/* Builds fresh per-player stats zeroed for a new leg. */
 function buildStats(players: Player[]): Record<string, PlayerStats> {
   const stats: Record<string, PlayerStats> = {};
   for (const player of players) {
-    stats[player.id] = { darts: 0, bestVisit: 0, lastVisit: 0, marks: 0, tonPlus: 0, oneEighties: 0 };
+    stats[player.id] = emptyStats();
   }
   return stats;
+}
+
+/* Merges two PlayerStats objects (accumulates across legs). */
+function mergeStats(a: PlayerStats, b: PlayerStats): PlayerStats {
+  return {
+    darts: a.darts + b.darts,
+    bestVisit: Math.max(a.bestVisit, b.bestVisit),
+    lastVisit: b.lastVisit,
+    marks: a.marks + b.marks,
+    tonPlus: a.tonPlus + b.tonPlus,
+    oneEighties: a.oneEighties + b.oneEighties,
+    checkoutAttempts: a.checkoutAttempts + b.checkoutAttempts,
+    checkoutHits: a.checkoutHits + b.checkoutHits,
+    pointsScored: a.pointsScored + b.pointsScored,
+  };
+}
+
+/* Accumulates the current leg stats into totalStats for all players. */
+function accumulateAllStats(state: GameState): Record<string, PlayerStats> {
+  const result: Record<string, PlayerStats> = {};
+  for (const player of state.players) {
+    const total = state.totalStats[player.id] ?? emptyStats();
+    const leg = state.stats[player.id] ?? emptyStats();
+    result[player.id] = mergeStats(total, leg);
+  }
+  return result;
 }
 
 /* Builds a zeroed legs-won tally for every player. */
@@ -83,6 +107,8 @@ function stripPast(state: GameState): GameState {
 }
 
 /* Stacks the previous state onto the next state's bounded undo history. */
+const HISTORY_CAP = 80;
+
 function withHistory(previous: GameState, next: GameState): GameState {
   if (next === previous) {
     return next;
@@ -93,9 +119,8 @@ function withHistory(previous: GameState, next: GameState): GameState {
 
 /* Deep-clones a single player state so reducer updates stay immutable. */
 function clonePlayerState(state: PlayerGameState): PlayerGameState {
-  if (state.kind === "x01") {
-    return { ...state };
-  }
+  if (state.kind === "x01") return { ...state };
+  if (state.kind === "aroundclock") return { ...state };
   return { kind: "cricket", marks: { ...state.marks }, score: state.score };
 }
 
@@ -117,7 +142,9 @@ function buildStates(config: GameConfig): Record<string, PlayerGameState> {
     states[player.id] =
       config.mode === "x01"
         ? createX01State(config.rules)
-        : createCricketState();
+        : config.mode === "aroundclock"
+          ? createAroundClockState()
+          : createCricketState();
   }
   return states;
 }
@@ -141,6 +168,16 @@ function replayTurn(
     return states;
   }
 
+  if (mode === "aroundclock") {
+    const states = cloneStates(snapshot);
+    let current = snapshot[currentId] as AroundClockPlayerState;
+    for (const dart of darts) {
+      current = applyAroundClockDart(current, dart).state;
+    }
+    states[currentId] = current;
+    return states;
+  }
+
   let map = cloneStates(snapshot) as Record<string, CricketPlayerState>;
   const cutThroat = mode === "cutthroat";
   for (const dart of darts) {
@@ -158,6 +195,30 @@ function reduceRegister(state: GameState, dart: DartThrow): GameState {
   const currentId = state.players[state.currentIndex].id;
   const darts = [...state.darts, dart];
   const prior = state.stats[currentId];
+
+  // ── Around the Clock ──────────────────────────────────────────────────────
+  if (state.mode === "aroundclock") {
+    const current = state.states[currentId] as AroundClockPlayerState;
+    const result = applyAroundClockDart(current, dart);
+    const atcStats: PlayerStats = {
+      ...prior,
+      darts: prior.darts + 1,
+      marks: prior.marks + (result.advanced ? 1 : 0),
+    };
+    return {
+      ...state,
+      states: { ...state.states, [currentId]: result.state },
+      darts,
+      turnOver: result.win || darts.length >= 3,
+      winnerId: result.win ? currentId : null,
+      stats: { ...state.stats, [currentId]: atcStats },
+      legsWon: result.win
+        ? { ...state.legsWon, [currentId]: state.legsWon[currentId] + 1 }
+        : state.legsWon,
+    };
+  }
+
+  // ── Shared base stats (x01 + cricket) ────────────────────────────────────
   const baseStats: PlayerStats = {
     darts: prior.darts + 1,
     bestVisit: prior.bestVisit,
@@ -165,12 +226,15 @@ function reduceRegister(state: GameState, dart: DartThrow): GameState {
     marks: prior.marks + dartMarks(dart),
     tonPlus: prior.tonPlus,
     oneEighties: prior.oneEighties,
+    checkoutAttempts: prior.checkoutAttempts,
+    checkoutHits: prior.checkoutHits,
+    pointsScored: prior.pointsScored,
   };
 
+  // ── x01 ──────────────────────────────────────────────────────────────────
   if (state.mode === "x01") {
     const current = state.states[currentId] as X01PlayerState;
     const result = applyX01Dart(current, dart, state.rules);
-    const stats = { ...state.stats, [currentId]: baseStats };
 
     if (result.bust) {
       return {
@@ -179,24 +243,45 @@ function reduceRegister(state: GameState, dart: DartThrow): GameState {
         darts,
         turnOver: true,
         bust: true,
-        stats,
+        stats: { ...state.stats, [currentId]: baseStats },
       };
     }
 
-    const states = { ...state.states, [currentId]: result.state };
+    let finalStats = { ...state.stats, [currentId]: baseStats };
+
+    if (result.win) {
+      const snapState = state.turnSnapshot?.[currentId];
+      const isCheckoutChance =
+        snapState?.kind === "x01" &&
+        snapState.opened &&
+        snapState.score > 0 &&
+        snapState.score <= 170;
+      const turnPointsTotal = darts.reduce((s, d) => s + d.points, 0);
+      finalStats = {
+        ...state.stats,
+        [currentId]: {
+          ...baseStats,
+          pointsScored: prior.pointsScored + turnPointsTotal,
+          checkoutAttempts: baseStats.checkoutAttempts + (isCheckoutChance ? 1 : 0),
+          checkoutHits: baseStats.checkoutHits + (isCheckoutChance ? 1 : 0),
+        },
+      };
+    }
+
     return {
       ...state,
-      states,
+      states: { ...state.states, [currentId]: result.state },
       darts,
       turnOver: result.win || darts.length >= 3,
       winnerId: result.win ? currentId : null,
-      stats,
+      stats: finalStats,
       legsWon: result.win
         ? { ...state.legsWon, [currentId]: state.legsWon[currentId] + 1 }
         : state.legsWon,
     };
   }
 
+  // ── Cricket / Cut-throat ──────────────────────────────────────────────────
   const cutThroat = state.mode === "cutthroat";
   const states = applyCricketDart(
     state.states as Record<string, CricketPlayerState>,
@@ -219,6 +304,28 @@ function reduceRegister(state: GameState, dart: DartThrow): GameState {
       : state.legsWon,
   };
 }
+
+const DEFAULT_STATE: GameState = {
+  screen: "home",
+  mode: "x01",
+  rules: { startScore: 501, inOption: "open", outOption: "double" },
+  players: [],
+  states: {},
+  currentIndex: 0,
+  darts: [],
+  turnSnapshot: null,
+  turnOver: false,
+  bust: false,
+  winnerId: null,
+  round: 1,
+  stats: {},
+  totalStats: {},
+  legsTarget: 1,
+  legsWon: {},
+  startIndex: 0,
+  recorded: false,
+  past: [],
+};
 
 /* Pure reducer holding every game transition; UI never computes scores. */
 function reducer(state: GameState, action: Action): GameState {
@@ -247,6 +354,7 @@ function reducer(state: GameState, action: Action): GameState {
         winnerId: null,
         round: 1,
         stats: buildStats(action.config.players),
+        totalStats: buildStats(action.config.players),
         legsTarget: action.config.legsTarget,
         legsWon: buildLegs(action.config.players),
         startIndex: 0,
@@ -299,13 +407,41 @@ function reducer(state: GameState, action: Action): GameState {
         return state;
       }
       const endingId = state.players[state.currentIndex].id;
-      const visit = state.bust
-        ? 0
-        : state.mode === "x01"
-          ? state.darts.reduce((sum, dart) => sum + dart.points, 0)
-          : state.darts.reduce((sum, dart) => sum + dartMarks(dart), 0);
+
+      const visit = (() => {
+        if (state.bust) return 0;
+        if (state.mode === "x01") {
+          return state.darts.reduce((sum, dart) => sum + dart.points, 0);
+        }
+        if (state.mode === "aroundclock") {
+          const snapState = state.turnSnapshot?.[endingId];
+          const currState = state.states[endingId];
+          if (
+            !snapState ||
+            snapState.kind !== "aroundclock" ||
+            currState.kind !== "aroundclock"
+          )
+            return 0;
+          if (currState.target === 0) {
+            return ATC_SEQUENCE.length - ATC_SEQUENCE.indexOf(snapState.target);
+          }
+          return Math.max(0, atcProgress(currState) - atcProgress(snapState));
+        }
+        return state.darts.reduce((sum, dart) => sum + dartMarks(dart), 0);
+      })();
+
       const ending = state.stats[endingId];
       const isX01Visit = state.mode === "x01" && !state.bust;
+
+      const snapState = state.turnSnapshot?.[endingId];
+      const isCheckoutAttempt =
+        state.mode === "x01" &&
+        snapState?.kind === "x01" &&
+        snapState.opened &&
+        snapState.score > 0 &&
+        snapState.score <= 170 &&
+        !state.winnerId;
+
       const stats = {
         ...state.stats,
         [endingId]: {
@@ -314,6 +450,8 @@ function reducer(state: GameState, action: Action): GameState {
           lastVisit: visit,
           tonPlus: ending.tonPlus + (isX01Visit && visit >= 100 ? 1 : 0),
           oneEighties: ending.oneEighties + (isX01Visit && visit === 180 ? 1 : 0),
+          checkoutAttempts: ending.checkoutAttempts + (isCheckoutAttempt ? 1 : 0),
+          pointsScored: ending.pointsScored + (isX01Visit ? visit : 0),
         },
       };
       const currentIndex = (state.currentIndex + 1) % state.players.length;
@@ -331,10 +469,13 @@ function reducer(state: GameState, action: Action): GameState {
       });
     }
 
-    case "FINISH":
-      return { ...state, screen: "result" };
+    case "FINISH": {
+      const newTotalStats = accumulateAllStats(state);
+      return { ...state, screen: "result", totalStats: newTotalStats };
+    }
 
     case "NEXT_LEG": {
+      const newTotalStats = accumulateAllStats(state);
       const startIndex = (state.startIndex + 1) % state.players.length;
       const config: GameConfig = {
         mode: state.mode,
@@ -355,6 +496,7 @@ function reducer(state: GameState, action: Action): GameState {
         winnerId: null,
         round: 1,
         stats: buildStats(state.players),
+        totalStats: newTotalStats,
         past: [],
       };
     }
@@ -379,6 +521,7 @@ function reducer(state: GameState, action: Action): GameState {
         winnerId: null,
         round: 1,
         stats: buildStats(state.players),
+        totalStats: buildStats(state.players),
         legsWon: buildLegs(state.players),
         startIndex: 0,
         recorded: false,
@@ -394,19 +537,23 @@ function reducer(state: GameState, action: Action): GameState {
 
     case "HYDRATE": {
       const saved = action.state;
+      const base = buildStats(saved.players);
+      const mergeStatsSaved = (
+        source: Record<string, PlayerStats> | undefined,
+      ): Record<string, PlayerStats> => {
+        if (!source) return buildStats(saved.players);
+        const merged: Record<string, PlayerStats> = {};
+        for (const [id, s] of Object.entries(source as Record<string, PlayerStats>)) {
+          merged[id] = { ...(base[id] ?? emptyStats()), ...s };
+        }
+        return merged;
+      };
       return {
         ...saved,
         past: saved.past ?? [],
         round: saved.round ?? 1,
-        stats: (() => {
-          if (!saved.stats) return buildStats(saved.players);
-          const base = buildStats(saved.players);
-          const merged: Record<string, PlayerStats> = {};
-          for (const [id, s] of Object.entries(saved.stats as Record<string, PlayerStats>)) {
-            merged[id] = { ...base[id] ?? base[saved.players[0]?.id ?? ""], ...s };
-          }
-          return merged;
-        })(),
+        stats: mergeStatsSaved(saved.stats as Record<string, PlayerStats> | undefined),
+        totalStats: mergeStatsSaved(saved.totalStats as Record<string, PlayerStats> | undefined),
         legsTarget: saved.legsTarget ?? 1,
         legsWon: saved.legsWon ?? buildLegs(saved.players),
         startIndex: saved.startIndex ?? 0,

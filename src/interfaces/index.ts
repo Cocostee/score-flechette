@@ -1,4 +1,4 @@
-export type GameMode = "x01" | "cricket" | "cutthroat";
+export type GameMode = "x01" | "cricket" | "cutthroat" | "aroundclock";
 
 export type Multiplier = 1 | 2 | 3;
 
@@ -39,7 +39,12 @@ export interface CricketPlayerState {
   score: number;
 }
 
-export type PlayerGameState = X01PlayerState | CricketPlayerState;
+export interface AroundClockPlayerState {
+  kind: "aroundclock";
+  target: number;
+}
+
+export type PlayerGameState = X01PlayerState | CricketPlayerState | AroundClockPlayerState;
 
 export interface PlayerStats {
   darts: number;
@@ -48,6 +53,9 @@ export interface PlayerStats {
   marks: number;
   tonPlus: number;
   oneEighties: number;
+  checkoutAttempts: number;
+  checkoutHits: number;
+  pointsScored: number;
 }
 
 export interface GameState {
@@ -64,6 +72,7 @@ export interface GameState {
   winnerId: string | null;
   round: number;
   stats: Record<string, PlayerStats>;
+  totalStats: Record<string, PlayerStats>;
   legsTarget: number;
   legsWon: Record<string, number>;
   startIndex: number;

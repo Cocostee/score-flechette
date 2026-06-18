@@ -31,7 +31,11 @@ export function summarizeGame(state: GameState): GameSummary {
     const stats = state.stats[player.id];
     const darts = stats?.darts ?? 0;
     const isX01 = ps.kind === "x01";
-    const points = isX01 ? state.rules.startScore - ps.score : ps.score;
+    const points = isX01
+      ? state.rules.startScore - ps.score
+      : ps.kind === "cricket"
+        ? ps.score
+        : 0;
     const marks = isX01 ? 0 : (stats?.marks ?? 0);
     const numerator = isX01 ? points : marks;
     const avg3 = darts > 0 ? (numerator / darts) * 3 : 0;

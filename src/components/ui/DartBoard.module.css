@@ -123,6 +123,26 @@
   fill: #cabfa0;
 }
 
+@keyframes atcPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+.zone[data-atctarget="true"] {
+  filter: brightness(1.8) saturate(1.5);
+  animation: atcPulse 1.4s ease-in-out infinite;
+  stroke: var(--gold) !important;
+  stroke-width: 2 !important;
+}
+
+.bullOuter[data-atctarget="true"],
+.bullInner[data-atctarget="true"] {
+  animation: atcPulse 1.4s ease-in-out infinite;
+  stroke: var(--gold) !important;
+  stroke-width: 2.5 !important;
+  filter: brightness(1.5);
+}
+
 .bullOuter {
   fill: var(--green);
   cursor: pointer;

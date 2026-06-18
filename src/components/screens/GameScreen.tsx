@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type {
+  AroundClockPlayerState,
   CricketPlayerState,
   DartThrow,
   X01PlayerState,
@@ -37,15 +38,9 @@ const CRICKET_LIVE = [15, 16, 17, 18, 19, 20];
 
 /* Builds a short label for a thrown dart, e.g. "T20", "D16", "Bull". */
 function dartLabel(dart: DartThrow): string {
-  if (dart.segment === 0) {
-    return "✕";
-  }
-  if (dart.segment === 50) {
-    return "Bull";
-  }
-  if (dart.segment === 25) {
-    return "25";
-  }
+  if (dart.segment === 0) return "✕";
+  if (dart.segment === 50) return "Bull";
+  if (dart.segment === 25) return "25";
   const prefix = dart.multiplier === 3 ? "T" : dart.multiplier === 2 ? "D" : "";
   return `${prefix}${dart.segment}`;
 }
@@ -54,7 +49,8 @@ function dartLabel(dart: DartThrow): string {
 export function GameScreen({ game }: GameScreenProps) {
   const { state, currentPlayer } = game;
   const info = getMode(state.mode);
-  const isCricket = state.mode !== "x01";
+  const isCricket = state.mode === "cricket" || state.mode === "cutthroat";
+  const isATC = state.mode === "aroundclock";
   const turnPoints = state.darts.reduce((sum, dart) => sum + dart.points, 0);
   const turnMarks = state.darts.reduce((sum, dart) => sum + dartMarks(dart), 0);
   const slots = [0, 1, 2];
@@ -65,12 +61,15 @@ export function GameScreen({ game }: GameScreenProps) {
       : null;
   const checkouts =
     activeX01 && activeX01.opened && !state.turnOver && !state.winnerId
-      ? suggestCheckouts(
-          activeX01.score,
-          3 - state.darts.length,
-          state.rules.outOption,
-        )
+      ? suggestCheckouts(activeX01.score, 3 - state.darts.length, state.rules.outOption)
       : [];
+
+  const atcState =
+    isATC && currentPlayer
+      ? (state.states[currentPlayer.id] as AroundClockPlayerState)
+      : null;
+  const atcTarget = atcState?.target ?? undefined;
+
   const [inputMode, setInputMode] = usePersistedState<"board" | "pad">(
     "oche:input",
     "board",
@@ -87,6 +86,7 @@ export function GameScreen({ game }: GameScreenProps) {
     window.addEventListener("popstate", handler);
     return () => window.removeEventListener("popstate", handler);
   }, []);
+
   const [muted, setMuted] = usePersistedState("oche:mute", false);
   const [voice] = usePersistedState("oche:voice", true);
   const [confettiOn] = usePersistedState("oche:confetti", true);
@@ -103,11 +103,7 @@ export function GameScreen({ game }: GameScreenProps) {
     } else if (state.turnOver && !prev.turnOver && !state.bust && !winner) {
       speak(isCricket ? `${turnMarks} marques` : `${turnPoints}`, voice && !muted);
     }
-    announced.current = {
-      turnOver: state.turnOver,
-      bust: state.bust,
-      winner,
-    };
+    announced.current = { turnOver: state.turnOver, bust: state.bust, winner };
   }, [
     state.turnOver,
     state.bust,
@@ -131,11 +127,7 @@ export function GameScreen({ game }: GameScreenProps) {
     } else if (state.darts.length > prev.darts) {
       feedback("throw", muted);
     }
-    previous.current = {
-      darts: state.darts.length,
-      bust: state.bust,
-      winner,
-    };
+    previous.current = { darts: state.darts.length, bust: state.bust, winner };
   }, [state.darts.length, state.bust, state.winnerId, muted]);
 
   const matchOver =
@@ -154,6 +146,11 @@ export function GameScreen({ game }: GameScreenProps) {
         }
       : undefined;
 
+  const atcTurnLabel = (() => {
+    if (!atcTarget) return null;
+    return atcTarget === 25 ? "Cible : Bull" : `Cible : ${atcTarget}`;
+  })();
+
   return (
     <div className={styles.screen}>
       <header className={styles.top}>
@@ -164,7 +161,7 @@ export function GameScreen({ game }: GameScreenProps) {
           aria-label="Quitter la partie"
         >
           <IconHome />
-</button>
+        </button>
         <div className={styles.modeInfo}>
           <span className={styles.modeName}>{info.name}</span>
           <span className={styles.modeSub}>
@@ -189,7 +186,7 @@ export function GameScreen({ game }: GameScreenProps) {
           aria-label="Annuler la dernière action"
         >
           <IconUndo />
-</button>
+        </button>
       </header>
 
       <div
@@ -220,10 +217,15 @@ export function GameScreen({ game }: GameScreenProps) {
             <span className={styles.turnRound}>Round {state.round}</span>
           </span>
           <span className={styles.turnTotal}>
-            Tour&nbsp;:{" "}
-            <strong>
-              {isCricket ? `${turnMarks} marq.` : turnPoints}
-            </strong>
+            {isATC && atcTurnLabel ? (
+              atcTurnLabel
+            ) : (
+              <>Tour&nbsp;:{" "}
+                <strong>
+                  {isCricket ? `${turnMarks} marq.` : turnPoints}
+                </strong>
+              </>
+            )}
           </span>
         </div>
         <div className={styles.slots}>
@@ -232,7 +234,9 @@ export function GameScreen({ game }: GameScreenProps) {
             const sub = dart
               ? isCricket
                 ? `${dartMarks(dart)} marq.`
-                : `${dart.points} pts`
+                : isATC
+                  ? dart.segment === 0 ? "raté" : "touché"
+                  : `${dart.points} pts`
               : `Fléch. ${slot + 1}`;
             return (
               <button
@@ -257,7 +261,11 @@ export function GameScreen({ game }: GameScreenProps) {
             <span className={styles.checkoutLabel}>Sortie</span>
             <div className={styles.checkoutList}>
               {checkouts.map((combo, i) => (
-                <span key={i} className={styles.checkoutCombo} data-alt={i > 0 ? "true" : undefined}>
+                <span
+                  key={i}
+                  className={styles.checkoutCombo}
+                  data-alt={i > 0 ? "true" : undefined}
+                >
                   {combo.join(" · ")}
                 </span>
               ))}
@@ -267,58 +275,61 @@ export function GameScreen({ game }: GameScreenProps) {
         {state.bust && <div className={styles.bust}>Bust — tour annulé</div>}
       </section>
 
-      <div className={styles.switch}>
-        <button
-          type="button"
-          className={styles.switchBtn}
-          data-on={inputMode === "board" ? "true" : "false"}
-          onClick={() => setInputMode("board")}
-        >
-          <IconTarget /> Cible
-</button>
-        <button
-          type="button"
-          className={styles.switchBtn}
-          data-on={inputMode === "pad" ? "true" : "false"}
-          onClick={() => setInputMode("pad")}
-        >
-          <IconGrid /> Chiffres
-</button>
-      </div>
-
-      {inputMode === "board" ? (
-        <>
-          <DartBoard
-            onThrow={game.registerDart}
-            disabled={inputDisabled}
-            cricket={cricketOverlay}
-            darts={state.darts}
-          />
+      <div className={styles.inputArea}>
+        <div className={styles.switch}>
           <button
             type="button"
-            className={styles.miss}
-            onClick={() => game.registerDart(0, 1)}
-            disabled={inputDisabled}
+            className={styles.switchBtn}
+            data-on={inputMode === "board" ? "true" : "false"}
+            onClick={() => setInputMode("board")}
           >
-            ✕ À côté
+            <IconTarget /> Cible
           </button>
-        </>
-      ) : (
-        <DartPad
-          onThrow={game.registerDart}
-          disabled={inputDisabled}
-          liveNumbers={isCricket ? CRICKET_LIVE : undefined}
-        />
-      )}
+          <button
+            type="button"
+            className={styles.switchBtn}
+            data-on={inputMode === "pad" ? "true" : "false"}
+            onClick={() => setInputMode("pad")}
+          >
+            <IconGrid /> Chiffres
+          </button>
+        </div>
 
-      <button
-        type="button"
-        className={`${styles.next} ${state.turnOver ? styles.nextReady : ""}`}
-        onClick={game.nextTurn}
-        disabled={state.winnerId !== null}
-      >
-        {state.turnOver ? "Joueur suivant →" : "Passer le tour"}
-      </button>
+        {inputMode === "board" ? (
+          <>
+            <DartBoard
+              onThrow={game.registerDart}
+              disabled={inputDisabled}
+              cricket={cricketOverlay}
+              darts={state.darts}
+              atcTarget={atcTarget}
+            />
+            <button
+              type="button"
+              className={styles.miss}
+              onClick={() => game.registerDart(0, 1)}
+              disabled={inputDisabled}
+            >
+              ✕ À côté
+            </button>
+          </>
+        ) : (
+          <DartPad
+            onThrow={game.registerDart}
+            disabled={inputDisabled}
+            liveNumbers={isCricket ? CRICKET_LIVE : undefined}
+          />
+        )}
+
+        <button
+          type="button"
+          className={`${styles.next} ${state.turnOver ? styles.nextReady : ""}`}
+          onClick={game.nextTurn}
+          disabled={state.winnerId !== null}
+        >
+          {state.turnOver ? "Joueur suivant →" : "Passer le tour"}
+        </button>
+      </div>
 
       {state.winnerId && (
         <div className={styles.overlay}>

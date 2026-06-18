@@ -1,6 +1,12 @@
 "use client";
 
-import type { Player, PlayerGameState, PlayerStats } from "@/interfaces";
+import type {
+  AroundClockPlayerState,
+  Player,
+  PlayerGameState,
+  PlayerStats,
+} from "@/interfaces";
+import { ATC_SEQUENCE, atcProgress } from "@/utils/aroundClock";
 import { CRICKET_NUMBERS } from "@/utils/cricket";
 import { IconTrophy } from "@/components/ui/icons";
 import styles from "./PlayerScoreCard.module.css";
@@ -32,6 +38,9 @@ function formatStat(
   if (state.kind === "x01") {
     return (((startScore - state.score) / stats.darts) * 3).toFixed(1);
   }
+  if (state.kind === "aroundclock") {
+    return ((stats.marks / stats.darts) * 3).toFixed(2);
+  }
   return ((stats.marks / stats.darts) * 3).toFixed(1);
 }
 
@@ -43,6 +52,33 @@ function MarksPips({ count }: { count: number }) {
       <span className={styles.pip} data-on={count >= 2 ? "true" : "false"} />
       <span className={styles.pip} data-on={count >= 3 ? "true" : "false"} />
     </span>
+  );
+}
+
+/* Progress display for Around the Clock mode. */
+function AtcDisplay({ state }: { state: AroundClockPlayerState }) {
+  const done = atcProgress(state);
+  const total = ATC_SEQUENCE.length;
+  const pct = (done / total) * 100;
+
+  return (
+    <div className={styles.atcWrap}>
+      <div className={styles.atcTarget}>
+        {state.target === 0
+          ? "Terminé !"
+          : state.target === 25
+            ? "Bull"
+            : state.target}
+      </div>
+      <div className={styles.atcMeta}>
+        <span className={styles.atcFraction}>
+          {done} / {total}
+        </span>
+        <div className={styles.atcBar}>
+          <div className={styles.atcBarFill} style={{ width: `${pct}%` }} />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -59,7 +95,8 @@ export function PlayerScoreCard({
   isCurrent,
   isWinner,
 }: PlayerScoreCardProps) {
-  const statLabel = state.kind === "x01" ? "Moy. /3" : "MPR";
+  const statLabel =
+    state.kind === "x01" ? "Moy. /3" : state.kind === "aroundclock" ? "H/T" : "MPR";
   return (
     <article
       className={styles.card}
@@ -83,6 +120,8 @@ export function PlayerScoreCard({
           {state.score}
           {!state.opened && <span className={styles.locked}>fermé</span>}
         </div>
+      ) : state.kind === "aroundclock" ? (
+        <AtcDisplay state={state} />
       ) : (
         <div className={styles.cricket}>
           <div className={styles.marks}>
