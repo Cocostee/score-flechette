@@ -2,6 +2,7 @@
 
 import type { Player, PlayerGameState, PlayerStats } from "@/interfaces";
 import { CRICKET_NUMBERS } from "@/utils/cricket";
+import { IconTrophy } from "@/components/ui/icons";
 import styles from "./PlayerScoreCard.module.css";
 
 interface PlayerScoreCardProps {
@@ -72,7 +73,7 @@ export function PlayerScoreCard({
           </span>
         )}
         <span className={styles.name}>{player.name}</span>
-        {showLegs && <span className={styles.legs}>🏆 {legsWon}</span>}
+        {showLegs && <span className={styles.legs}><IconTrophy style={{ fontSize: "0.85em" }} /> {legsWon}</span>}
         {isWinner && <span className={styles.badge}>Gagné</span>}
         {!isWinner && isCurrent && <span className={styles.turn}>à toi</span>}
       </header>

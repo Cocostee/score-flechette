@@ -233,6 +233,10 @@
 .stats {
   margin-top: 6px;
   padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   border: none;
   border-radius: 11px;
   background: linear-gradient(180deg, var(--surface-2), var(--surface));
@@ -250,6 +254,10 @@
 .signout {
   margin-top: 6px;
   padding: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   border: 1px solid var(--line-strong);
   border-radius: 11px;
   background: transparent;
@@ -309,6 +317,10 @@
 
 .toggle {
   padding: 11px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   border-radius: 10px;
   border: 1px solid var(--line);
   background: var(--bg-deep);

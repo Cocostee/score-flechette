@@ -6,10 +6,29 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePlayers } from "@/hooks/usePlayers";
 import { useSocial } from "@/hooks/useSocial";
 import { useTheme, THEMES } from "@/hooks/useTheme";
+import type { Theme } from "@/hooks/useTheme";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { StatsScreen } from "@/components/stats/StatsScreen";
 import { FriendsScreen } from "@/components/account/FriendsScreen";
+import {
+  IconUser,
+  IconUsers,
+  IconBarChart,
+  IconLogOut,
+  IconX,
+  IconMic,
+  IconSparkles,
+  IconSun,
+  IconMoon,
+  IconTarget,
+} from "@/components/ui/icons";
 import styles from "./AccountButton.module.css";
+
+function ThemeIcon({ id }: { id: Theme }) {
+  if (id === "light") return <IconSun />;
+  if (id === "night") return <IconMoon />;
+  return <IconTarget />;
+}
 
 /* Account entry point: opens auth or the tracked-profiles manager. */
 export function AccountButton() {
@@ -91,7 +110,7 @@ export function AccountButton() {
             )}
           </span>
         ) : (
-          "👤 Compte"
+          <><IconUser /> Compte</>
         )}
       </button>
 
@@ -112,7 +131,7 @@ export function AccountButton() {
               onClick={() => setOpen(false)}
               aria-label="Fermer"
             >
-              ×
+              <IconX />
             </button>
 
             {!auth.user ? (
@@ -214,7 +233,7 @@ export function AccountButton() {
                     setShowFriends(true);
                   }}
                 >
-                  👥 Mes amis
+                  <IconUsers /> Mes amis
                 </button>
 
                 <button
@@ -225,7 +244,7 @@ export function AccountButton() {
                     setShowStats(true);
                   }}
                 >
-                  📊 Mes stats
+                  <IconBarChart /> Mes stats
                 </button>
 
                 <button
@@ -233,7 +252,7 @@ export function AccountButton() {
                   className={styles.signout}
                   onClick={() => auth.signOut()}
                 >
-                  Se déconnecter
+                  <IconLogOut /> Se déconnecter
                 </button>
               </div>
             )}
@@ -249,7 +268,7 @@ export function AccountButton() {
                     data-on={theme === option.id ? "true" : "false"}
                     onClick={() => setTheme(option.id)}
                   >
-                    {option.emoji} {option.label}
+                    <ThemeIcon id={option.id} /> {option.label}
                   </button>
                 ))}
               </div>
@@ -264,7 +283,7 @@ export function AccountButton() {
                   data-on={voice ? "true" : "false"}
                   onClick={() => setVoice(!voice)}
                 >
-                  🗣️ Annonceur {voice ? "ON" : "OFF"}
+                  <IconMic /> Annonceur {voice ? "ON" : "OFF"}
                 </button>
                 <button
                   type="button"
@@ -272,7 +291,7 @@ export function AccountButton() {
                   data-on={confetti ? "true" : "false"}
                   onClick={() => setConfetti(!confetti)}
                 >
-                  🎉 Confettis {confetti ? "ON" : "OFF"}
+                  <IconSparkles /> Confettis {confetti ? "ON" : "OFF"}
                 </button>
               </div>
             </div>

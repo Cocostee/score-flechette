@@ -5,10 +5,10 @@ import { usePersistedState } from "@/hooks/usePersistedState";
 
 export type Theme = "brown" | "light" | "night";
 
-export const THEMES: { id: Theme; label: string; emoji: string }[] = [
-  { id: "light", label: "Clair", emoji: "☀️" },
-  { id: "brown", label: "Marron", emoji: "🍺" },
-  { id: "night", label: "Nuit", emoji: "🌙" },
+export const THEMES: { id: Theme; label: string }[] = [
+  { id: "light", label: "Clair" },
+  { id: "brown", label: "Marron" },
+  { id: "night", label: "Nuit" },
 ];
 
 const META_COLOR: Record<Theme, string> = {

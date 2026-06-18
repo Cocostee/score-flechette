@@ -239,6 +239,10 @@
 
 .switchBtn {
   padding: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   border: none;
   border-radius: 9px;
   background: transparent;

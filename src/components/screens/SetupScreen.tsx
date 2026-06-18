@@ -13,6 +13,7 @@ import { getMode, X01_START_SCORES } from "@/data/modes";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlayers } from "@/hooks/usePlayers";
 import { useSocial } from "@/hooks/useSocial";
+import { IconArrowLeft, IconUser, IconStar } from "@/components/ui/icons";
 import styles from "./SetupScreen.module.css";
 
 interface SetupScreenProps {
@@ -144,7 +145,7 @@ export function SetupScreen({ game }: SetupScreenProps) {
     <div className={styles.screen}>
       <header className={styles.top}>
         <button type="button" className={styles.back} onClick={game.goHome}>
-          ← Retour
+          <IconArrowLeft /> Retour
         </button>
         <div className={styles.modeTag}>
           <span className={styles.modeKicker}>Mode</span>
@@ -166,7 +167,7 @@ export function SetupScreen({ game }: SetupScreenProps) {
                   player.profileId || player.friendUserId ? "true" : "false"
                 }
               >
-                {player.profileId ? "★" : player.friendUserId ? "👤" : index + 1}
+                {player.profileId ? <IconStar style={{ fontSize: "0.9em" }} /> : player.friendUserId ? <IconUser style={{ fontSize: "0.9em" }} /> : index + 1}
               </span>
               <input
                 className={styles.input}
@@ -212,7 +213,7 @@ export function SetupScreen({ game }: SetupScreenProps) {
                     disabled={used || players.length >= MAX_PLAYERS}
                     onClick={() => addProfile(profile)}
                   >
-                    ★ {profile.name}
+                    <IconStar /> {profile.name}
                   </button>
                 );
               })}
@@ -236,7 +237,7 @@ export function SetupScreen({ game }: SetupScreenProps) {
                     disabled={meUsed || players.length >= MAX_PLAYERS}
                     onClick={() => addFriendSlot(meId, meLabel)}
                   >
-                    👤 Moi
+                    <IconUser /> Moi
                   </button>
                 );
               })()}
@@ -255,7 +256,7 @@ export function SetupScreen({ game }: SetupScreenProps) {
                       addFriendSlot(friend.userId, `@${friend.username}`)
                     }
                   >
-                    👤 @{friend.username}
+                    <IconUser /> @{friend.username}
                   </button>
                 );
               })}

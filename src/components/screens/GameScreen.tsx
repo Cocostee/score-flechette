@@ -19,6 +19,14 @@ import { DartPad } from "@/components/ui/DartPad";
 import { DartBoard } from "@/components/ui/DartBoard";
 import { Confetti } from "@/components/ui/Confetti";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import {
+  IconHome,
+  IconVolumeOn,
+  IconVolumeOff,
+  IconUndo,
+  IconTarget,
+  IconGrid,
+} from "@/components/ui/icons";
 import styles from "./GameScreen.module.css";
 
 interface GameScreenProps {
@@ -145,8 +153,8 @@ export function GameScreen({ game }: GameScreenProps) {
           onClick={() => setConfirmQuit(true)}
           aria-label="Quitter la partie"
         >
-          ⌂
-        </button>
+          <IconHome />
+</button>
         <div className={styles.modeInfo}>
           <span className={styles.modeName}>{info.name}</span>
           <span className={styles.modeSub}>
@@ -161,7 +169,7 @@ export function GameScreen({ game }: GameScreenProps) {
           onClick={() => setMuted(!muted)}
           aria-label={muted ? "Activer le son" : "Couper le son"}
         >
-          {muted ? "🔇" : "🔊"}
+          {muted ? <IconVolumeOff /> : <IconVolumeOn />}
         </button>
         <button
           type="button"
@@ -170,8 +178,8 @@ export function GameScreen({ game }: GameScreenProps) {
           disabled={state.past.length === 0}
           aria-label="Annuler la dernière action"
         >
-          ↺
-        </button>
+          <IconUndo />
+</button>
       </header>
 
       <div
@@ -250,16 +258,16 @@ export function GameScreen({ game }: GameScreenProps) {
           data-on={inputMode === "board" ? "true" : "false"}
           onClick={() => setInputMode("board")}
         >
-          🎯 Cible
-        </button>
+          <IconTarget /> Cible
+</button>
         <button
           type="button"
           className={styles.switchBtn}
           data-on={inputMode === "pad" ? "true" : "false"}
           onClick={() => setInputMode("pad")}
         >
-          # Chiffres
-        </button>
+          <IconGrid /> Chiffres
+</button>
       </div>
 
       {inputMode === "board" ? (
