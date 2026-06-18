@@ -12,10 +12,12 @@ import { deadNumbers, dartMarks } from "@/utils/cricket";
 import { suggestCheckout } from "@/utils/checkout";
 import { liveRanks } from "@/utils/ranking";
 import { feedback } from "@/utils/feedback";
+import { speak } from "@/utils/announcer";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { PlayerScoreCard } from "@/components/ui/PlayerScoreCard";
 import { DartPad } from "@/components/ui/DartPad";
 import { DartBoard } from "@/components/ui/DartBoard";
+import { Confetti } from "@/components/ui/Confetti";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import styles from "./GameScreen.module.css";
 
@@ -68,6 +70,37 @@ export function GameScreen({ game }: GameScreenProps) {
   const inputDisabled = state.turnOver || state.winnerId !== null;
   const [confirmQuit, setConfirmQuit] = useState(false);
   const [muted, setMuted] = usePersistedState("oche:mute", false);
+  const [voice] = usePersistedState("oche:voice", true);
+  const [confettiOn] = usePersistedState("oche:confetti", true);
+
+  const announced = useRef({ turnOver: false, bust: false, winner: "" });
+  useEffect(() => {
+    const prev = announced.current;
+    const winner = state.winnerId ?? "";
+    if (winner && winner !== prev.winner) {
+      const name = state.players.find((p) => p.id === winner)?.name ?? "";
+      speak(`${name}, partie terminée`, voice && !muted);
+    } else if (state.bust && !prev.bust) {
+      speak("Bust", voice && !muted);
+    } else if (state.turnOver && !prev.turnOver && !state.bust && !winner) {
+      speak(isCricket ? `${turnMarks} marques` : `${turnPoints}`, voice && !muted);
+    }
+    announced.current = {
+      turnOver: state.turnOver,
+      bust: state.bust,
+      winner,
+    };
+  }, [
+    state.turnOver,
+    state.bust,
+    state.winnerId,
+    state.players,
+    voice,
+    muted,
+    isCricket,
+    turnMarks,
+    turnPoints,
+  ]);
 
   const previous = useRef({ darts: 0, bust: false, winner: "" });
   useEffect(() => {
@@ -265,6 +298,7 @@ export function GameScreen({ game }: GameScreenProps) {
 
       {state.winnerId && (
         <div className={styles.overlay}>
+          {confettiOn && <Confetti />}
           <div className={styles.victory}>
             <p className={styles.victoryKicker}>
               {matchOver ? "Match terminé" : "Manche gagnée"}

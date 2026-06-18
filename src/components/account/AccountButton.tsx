@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlayers } from "@/hooks/usePlayers";
 import { useSocial } from "@/hooks/useSocial";
 import { useTheme, THEMES } from "@/hooks/useTheme";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import { StatsScreen } from "@/components/stats/StatsScreen";
 import { FriendsScreen } from "@/components/account/FriendsScreen";
 import styles from "./AccountButton.module.css";
@@ -15,6 +17,8 @@ export function AccountButton() {
   const players = usePlayers(auth.user?.id ?? null);
   const social = useSocial(auth.user?.id ?? null);
   const [theme, setTheme] = useTheme();
+  const [voice, setVoice] = usePersistedState("oche:voice", true);
+  const [confetti, setConfetti] = usePersistedState("oche:confetti", true);
   const [open, setOpen] = useState(false);
   const [signup, setSignup] = useState(false);
   const [email, setEmail] = useState("");
@@ -91,7 +95,10 @@ export function AccountButton() {
         )}
       </button>
 
-      {open && (
+      {typeof document !== "undefined" &&
+        createPortal(
+          <>
+            {open && (
         <div className={styles.backdrop} onClick={() => setOpen(false)}>
           <div
             className={styles.panel}
@@ -248,6 +255,28 @@ export function AccountButton() {
               </div>
             </div>
 
+            <div className={styles.themeRow}>
+              <span className={styles.themeLabel}>Effets</span>
+              <div className={styles.toggles}>
+                <button
+                  type="button"
+                  className={styles.toggle}
+                  data-on={voice ? "true" : "false"}
+                  onClick={() => setVoice(!voice)}
+                >
+                  🗣️ Annonceur {voice ? "ON" : "OFF"}
+                </button>
+                <button
+                  type="button"
+                  className={styles.toggle}
+                  data-on={confetti ? "true" : "false"}
+                  onClick={() => setConfetti(!confetti)}
+                >
+                  🎉 Confettis {confetti ? "ON" : "OFF"}
+                </button>
+              </div>
+            </div>
+
             {message && <p className={styles.message}>{message}</p>}
           </div>
         </div>
@@ -261,12 +290,15 @@ export function AccountButton() {
         />
       )}
 
-      {showFriends && auth.user && (
-        <FriendsScreen
-          userId={auth.user.id}
-          onClose={() => setShowFriends(false)}
-        />
-      )}
+            {showFriends && auth.user && (
+              <FriendsScreen
+                userId={auth.user.id}
+                onClose={() => setShowFriends(false)}
+              />
+            )}
+          </>,
+          document.body,
+        )}
     </>
   );
 }

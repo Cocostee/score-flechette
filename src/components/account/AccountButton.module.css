@@ -301,6 +301,29 @@
   color: var(--chalk);
 }
 
+.toggles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.toggle {
+  padding: 11px 6px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--bg-deep);
+  color: var(--chalk-dim);
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: all 0.14s ease;
+}
+
+.toggle[data-on="true"] {
+  border-color: var(--green);
+  background: rgba(42, 161, 94, 0.12);
+  color: var(--chalk);
+}
+
 .message {
   margin: 14px 0 0;
   padding: 10px 12px;
