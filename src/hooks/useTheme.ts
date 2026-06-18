@@ -22,11 +22,15 @@ export function useTheme(): [Theme, (theme: Theme) => void] {
   const [theme, setTheme] = usePersistedState<Theme>("oche:theme", "brown");
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
+    const root = document.documentElement;
+    root.classList.add("theme-changing");
+    root.dataset.theme = theme;
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
       meta.setAttribute("content", META_COLOR[theme] ?? META_COLOR.brown);
     }
+    const timer = setTimeout(() => root.classList.remove("theme-changing"), 400);
+    return () => clearTimeout(timer);
   }, [theme]);
 
   return [theme, setTheme];

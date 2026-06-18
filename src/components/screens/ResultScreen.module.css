@@ -1,80 +1,148 @@
 .screen {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: clamp(28px, 8vh, 64px) 0 40px;
+  gap: 22px;
+  padding: clamp(20px, 5vh, 40px) 0 40px;
   animation: rise 0.4s ease both;
 }
 
+/* ── Header ─────────────────────────────────────── */
+
 .head {
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.trophyWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201, 164, 74, 0.18) 0%, transparent 70%);
+  margin-bottom: 4px;
+  animation: popIn 0.4s ease both;
 }
 
 .kicker {
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 0.74rem;
   letter-spacing: 0.26em;
   text-transform: uppercase;
   color: var(--gold);
 }
 
-.title {
-  font-size: clamp(3.4rem, 16vw, 6rem);
+.winner {
+  font-size: clamp(3rem, 16vw, 5.5rem);
   color: var(--chalk);
+  line-height: 0.92;
 }
 
-.list {
-  list-style: none;
+.winnerSub {
   margin: 0;
-  padding: 0;
+  font-size: 0.85rem;
+  color: var(--chalk-dim);
+  letter-spacing: 0.06em;
+}
+
+/* ── Breakdown ───────────────────────────────────── */
+
+.breakdown {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.row {
+.breakdownTitle {
+  font-family: var(--font-body), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--chalk-dim);
+}
+
+.legNote {
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.playerCards {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 16px 18px;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Player card ─────────────────────────────────── */
+
+.playerCard {
   border-radius: var(--radius);
   border: 1px solid var(--line);
   background: linear-gradient(180deg, var(--surface), var(--bg-deep));
+  padding: 14px 16px;
   animation: rise 0.45s ease both;
+  transition: border-color 0.18s ease;
 }
 
-.row[data-first="true"] {
-  border-color: var(--green);
+.playerCard[data-winner="true"] {
+  border-color: var(--gold);
   background: linear-gradient(
-    180deg,
-    var(--surface-2),
-    rgba(42, 161, 94, 0.07)
+    160deg,
+    rgba(201, 164, 74, 0.1),
+    var(--surface),
+    var(--bg-deep)
   );
-  box-shadow: 0 12px 30px -18px rgba(42, 161, 94, 0.6);
+  box-shadow: 0 12px 32px -18px rgba(201, 164, 74, 0.55);
 }
 
-.place {
+.playerCardHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.playerMedal {
   flex-shrink: 0;
-  width: 36px;
+  min-width: 36px;
   height: 36px;
+  padding: 0 6px;
   display: grid;
   place-items: center;
   border-radius: 10px;
   background: var(--surface-2);
+  border: 1px solid var(--line);
   color: var(--chalk-dim);
   font-family: var(--font-display), serif;
-  font-size: 1.4rem;
+  font-size: 1.1rem;
 }
 
-.row[data-first="true"] .place {
-  background: linear-gradient(180deg, var(--green), var(--green-deep));
-  color: #fff;
+.playerMedal[data-medal="Or"] {
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+  border-color: transparent;
+  color: var(--ink);
 }
 
-.rowName {
+.playerMedal[data-medal="Argent"] {
+  background: linear-gradient(180deg, #c8cdd6, #9ea5b0);
+  border-color: transparent;
+  color: #1a1e24;
+}
+
+.playerMedal[data-medal="Bronze"] {
+  background: linear-gradient(180deg, #cd8c5a, #a0622e);
+  border-color: transparent;
+  color: #1f0f00;
+}
+
+.playerCardName {
   flex: 1;
   min-width: 0;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 600;
   color: var(--chalk);
   white-space: nowrap;
@@ -82,17 +150,50 @@
   text-overflow: ellipsis;
 }
 
-.rowValue {
-  font-size: 0.86rem;
+.playerSummary {
+  font-size: 0.8rem;
   color: var(--chalk-dim);
   white-space: nowrap;
 }
+
+/* ── Per-player stat row ─────────────────────────── */
+
+.playerStats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.playerStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.playerStatVal {
+  font-family: var(--font-display), serif;
+  font-size: 1.35rem;
+  color: var(--chalk);
+  line-height: 1;
+}
+
+.playerStatLabel {
+  font-size: 0.56rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--chalk-faint);
+}
+
+/* ── Actions ─────────────────────────────────────── */
 
 .actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 .replay {

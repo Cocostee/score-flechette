@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { DartThrow, Multiplier } from "@/interfaces";
 import {
   BOARD_ORDER,
@@ -39,6 +39,16 @@ export function DartBoard({
   darts = [],
 }: DartBoardProps) {
   const zones = useMemo(() => buildBoardZones(CX, CY, R), []);
+  const [flashKey, setFlashKey] = useState<string | null>(null);
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => { if (flashTimer.current) clearTimeout(flashTimer.current); }, []);
+
+  const flash = (key: string) => {
+    if (flashTimer.current) clearTimeout(flashTimer.current);
+    setFlashKey(key);
+    flashTimer.current = setTimeout(() => setFlashKey(null), 420);
+  };
 
   const markers = darts
     .map((dart, index) => {
@@ -85,7 +95,7 @@ export function DartBoard({
         cy={CY}
         r={R + 28}
         className={styles.rim}
-        onClick={() => onThrow(0, 1)}
+        onClick={() => { onThrow(0, 1); flash("miss"); }}
       >
         <title>À côté · 0</title>
       </circle>
@@ -94,7 +104,7 @@ export function DartBoard({
         cy={CY}
         r={R + 16}
         className={styles.rimInner}
-        onClick={() => onThrow(0, 1)}
+        onClick={() => { onThrow(0, 1); flash("miss"); }}
       >
         <title>À côté · 0</title>
       </circle>
@@ -111,7 +121,8 @@ export function DartBoard({
               data-base={zone.base}
               data-ring={zone.ring}
               data-state={state}
-              onClick={() => onThrow(zone.segment, zone.multiplier)}
+              data-flash={flashKey === zone.key ? "true" : undefined}
+              onClick={() => { onThrow(zone.segment, zone.multiplier); flash(zone.key); }}
             >
               <title>
                 {zone.multiplier === 3
@@ -146,7 +157,8 @@ export function DartBoard({
         r={R * RINGS.bull25}
         className={styles.bullOuter}
         data-state={bullState}
-        onClick={() => onThrow(25, 1)}
+        data-flash={flashKey === "bull25" ? "true" : undefined}
+        onClick={() => { onThrow(25, 1); flash("bull25"); }}
       >
         <title>Bulle extérieure · 25</title>
       </circle>
@@ -156,7 +168,8 @@ export function DartBoard({
         r={R * RINGS.bull50}
         className={styles.bullInner}
         data-state={bullState}
-        onClick={() => onThrow(50, 1)}
+        data-flash={flashKey === "bull50" ? "true" : undefined}
+        onClick={() => { onThrow(50, 1); flash("bull50"); }}
       >
         <title>Bulle centrale · 50</title>
       </circle>

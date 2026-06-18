@@ -46,6 +46,8 @@ export interface PlayerStats {
   bestVisit: number;
   lastVisit: number;
   marks: number;
+  tonPlus: number;
+  oneEighties: number;
 }
 
 export interface GameState {

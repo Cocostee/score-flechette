@@ -79,3 +79,42 @@ export function suggestCheckout(
   const setups = [...ALL].sort((a, b) => b.value - a.value);
   return solve(score, dartsLeft, out, finishers, setups);
 }
+
+/* Returns up to three distinct finishing routes, varying the first dart each time. */
+export function suggestCheckouts(
+  score: number,
+  dartsLeft: number,
+  out: X01OutOption,
+): string[][] {
+  if (score <= 1 || score > MAX_CHECKOUT || dartsLeft <= 0) {
+    return [];
+  }
+  const finishers = ALL.filter((o) => canFinish(o, out)).sort(
+    (a, b) => a.value - b.value,
+  );
+  const setups = [...ALL].sort((a, b) => b.value - a.value);
+  const results: string[][] = [];
+  const usedFirst = new Set<string>();
+
+  const base = solve(score, dartsLeft, out, finishers, setups);
+  if (base) {
+    results.push(base);
+    usedFirst.add(base[0]);
+  }
+
+  if (dartsLeft <= 1) return results;
+
+  for (const start of setups) {
+    if (results.length >= 3) break;
+    if (usedFirst.has(start.label)) continue;
+    const rest = score - start.value;
+    if (rest < 2) continue;
+    const tail = solve(rest, dartsLeft - 1, out, finishers, setups);
+    if (tail) {
+      usedFirst.add(start.label);
+      results.push([start.label, ...tail]);
+    }
+  }
+
+  return results;
+}

@@ -176,3 +176,13 @@ input {
     background-color: rgba(216, 53, 42, 0.35);
   }
 }
+
+.theme-changing *,
+.theme-changing *::before,
+.theme-changing *::after {
+  transition:
+    background-color 0.32s ease,
+    border-color 0.32s ease,
+    color 0.32s ease,
+    box-shadow 0.32s ease !important;
+}

@@ -32,6 +32,20 @@
     opacity 0.18s ease;
 }
 
+@keyframes zoneFlash {
+  0% { filter: brightness(3.5) saturate(0.4); }
+  100% { filter: brightness(1) saturate(1); }
+}
+
+.zone[data-flash="true"] {
+  animation: zoneFlash 0.42s ease forwards;
+}
+
+.bullOuter[data-flash="true"],
+.bullInner[data-flash="true"] {
+  animation: zoneFlash 0.42s ease forwards;
+}
+
 .zone[data-base="dark"] {
   fill: #17130b;
 }

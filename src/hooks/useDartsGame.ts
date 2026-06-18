@@ -63,7 +63,7 @@ const HISTORY_CAP = 80;
 function buildStats(players: Player[]): Record<string, PlayerStats> {
   const stats: Record<string, PlayerStats> = {};
   for (const player of players) {
-    stats[player.id] = { darts: 0, bestVisit: 0, lastVisit: 0, marks: 0 };
+    stats[player.id] = { darts: 0, bestVisit: 0, lastVisit: 0, marks: 0, tonPlus: 0, oneEighties: 0 };
   }
   return stats;
 }
@@ -163,6 +163,8 @@ function reduceRegister(state: GameState, dart: DartThrow): GameState {
     bestVisit: prior.bestVisit,
     lastVisit: prior.lastVisit,
     marks: prior.marks + dartMarks(dart),
+    tonPlus: prior.tonPlus,
+    oneEighties: prior.oneEighties,
   };
 
   if (state.mode === "x01") {
@@ -303,12 +305,15 @@ function reducer(state: GameState, action: Action): GameState {
           ? state.darts.reduce((sum, dart) => sum + dart.points, 0)
           : state.darts.reduce((sum, dart) => sum + dartMarks(dart), 0);
       const ending = state.stats[endingId];
+      const isX01Visit = state.mode === "x01" && !state.bust;
       const stats = {
         ...state.stats,
         [endingId]: {
           ...ending,
           bestVisit: Math.max(ending.bestVisit, visit),
           lastVisit: visit,
+          tonPlus: ending.tonPlus + (isX01Visit && visit >= 100 ? 1 : 0),
+          oneEighties: ending.oneEighties + (isX01Visit && visit === 180 ? 1 : 0),
         },
       };
       const currentIndex = (state.currentIndex + 1) % state.players.length;
@@ -393,7 +398,15 @@ function reducer(state: GameState, action: Action): GameState {
         ...saved,
         past: saved.past ?? [],
         round: saved.round ?? 1,
-        stats: saved.stats ?? buildStats(saved.players),
+        stats: (() => {
+          if (!saved.stats) return buildStats(saved.players);
+          const base = buildStats(saved.players);
+          const merged: Record<string, PlayerStats> = {};
+          for (const [id, s] of Object.entries(saved.stats as Record<string, PlayerStats>)) {
+            merged[id] = { ...base[id] ?? base[saved.players[0]?.id ?? ""], ...s };
+          }
+          return merged;
+        })(),
         legsTarget: saved.legsTarget ?? 1,
         legsWon: saved.legsWon ?? buildLegs(saved.players),
         startIndex: saved.startIndex ?? 0,

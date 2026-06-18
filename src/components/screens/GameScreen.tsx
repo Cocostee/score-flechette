@@ -9,7 +9,7 @@ import type {
 import type { DartsGame } from "@/hooks/useDartsGame";
 import { getMode } from "@/data/modes";
 import { deadNumbers, dartMarks } from "@/utils/cricket";
-import { suggestCheckout } from "@/utils/checkout";
+import { suggestCheckouts } from "@/utils/checkout";
 import { liveRanks } from "@/utils/ranking";
 import { feedback } from "@/utils/feedback";
 import { speak } from "@/utils/announcer";
@@ -63,20 +63,30 @@ export function GameScreen({ game }: GameScreenProps) {
     state.mode === "x01" && currentPlayer
       ? (state.states[currentPlayer.id] as X01PlayerState)
       : null;
-  const checkout =
+  const checkouts =
     activeX01 && activeX01.opened && !state.turnOver && !state.winnerId
-      ? suggestCheckout(
+      ? suggestCheckouts(
           activeX01.score,
           3 - state.darts.length,
           state.rules.outOption,
         )
-      : null;
+      : [];
   const [inputMode, setInputMode] = usePersistedState<"board" | "pad">(
     "oche:input",
     "board",
   );
   const inputDisabled = state.turnOver || state.winnerId !== null;
   const [confirmQuit, setConfirmQuit] = useState(false);
+
+  useEffect(() => {
+    window.history.pushState(null, "");
+    const handler = () => {
+      setConfirmQuit(true);
+      window.history.pushState(null, "");
+    };
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, []);
   const [muted, setMuted] = usePersistedState("oche:mute", false);
   const [voice] = usePersistedState("oche:voice", true);
   const [confettiOn] = usePersistedState("oche:confetti", true);
@@ -242,10 +252,16 @@ export function GameScreen({ game }: GameScreenProps) {
             );
           })}
         </div>
-        {checkout && (
+        {checkouts.length > 0 && (
           <div className={styles.checkout}>
             <span className={styles.checkoutLabel}>Sortie</span>
-            <span className={styles.checkoutCombo}>{checkout.join(" · ")}</span>
+            <div className={styles.checkoutList}>
+              {checkouts.map((combo, i) => (
+                <span key={i} className={styles.checkoutCombo} data-alt={i > 0 ? "true" : undefined}>
+                  {combo.join(" · ")}
+                </span>
+              ))}
+            </div>
           </div>
         )}
         {state.bust && <div className={styles.bust}>Bust — tour annulé</div>}
