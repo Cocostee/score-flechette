@@ -66,7 +66,7 @@ export function FriendStatsScreen({
   }
 
   return createPortal(
-    <div className={styles.screen}>
+    <div className={styles.screen} style={{ zIndex: 90 }}>
       <header className={styles.top}>
         <button type="button" className={styles.back} onClick={onClose}>
           ← Retour

@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import type { FriendInfo } from "@/lib/social";
 import { useSocial } from "@/hooks/useSocial";
 import { FriendStatsScreen } from "@/components/stats/FriendStatsScreen";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import styles from "./FriendsScreen.module.css";
 
 interface FriendsScreenProps {
@@ -19,6 +20,7 @@ export function FriendsScreen({ userId, onClose }: FriendsScreenProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [viewFriend, setViewFriend] = useState<FriendInfo | null>(null);
+  const [pendingRemove, setPendingRemove] = useState<FriendInfo | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const onPickAvatar = async (file: File | undefined) => {
@@ -212,8 +214,8 @@ export function FriendsScreen({ userId, onClose }: FriendsScreenProps) {
                   <button
                     type="button"
                     className={styles.decline}
-                    aria-label="Retirer"
-                    onClick={() => social.remove(friend.friendshipId)}
+                    aria-label={`Retirer @${friend.username}`}
+                    onClick={() => setPendingRemove(friend)}
                   >
                     −
                   </button>
@@ -233,6 +235,20 @@ export function FriendsScreen({ userId, onClose }: FriendsScreenProps) {
           username={viewFriend.username}
           avatarUrl={viewFriend.avatarUrl}
           onClose={() => setViewFriend(null)}
+        />
+      )}
+
+      {pendingRemove && (
+        <ConfirmDialog
+          title="Retirer cet ami ?"
+          message={`@${pendingRemove.username} sera retiré de ta liste d'amis. Vous pourrez vous réajouter plus tard.`}
+          confirmLabel="Retirer"
+          cancelLabel="Annuler"
+          onConfirm={() => {
+            void social.remove(pendingRemove.friendshipId);
+            setPendingRemove(null);
+          }}
+          onCancel={() => setPendingRemove(null)}
         />
       )}
     </div>
