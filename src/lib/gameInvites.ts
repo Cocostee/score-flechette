@@ -156,8 +156,8 @@ export function subscribeInvites(
         filter: `${column}=eq.${userId}`,
       },
       (payload) => {
-        const row = (payload.new ?? payload.old) as InviteRow | undefined;
-        if (!row) {
+        const row = (payload.new ?? payload.old) as Partial<InviteRow> | undefined;
+        if (!row || !row.id || !row.host_id || !row.guest_id || !row.mode || !row.status) {
           onChange(null);
           return;
         }
