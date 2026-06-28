@@ -79,11 +79,13 @@ export async function listHostInvites(hostId: string): Promise<GameInvite[]> {
   if (!supabase) {
     return [];
   }
+  const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
   const { data } = await supabase
     .from("game_invites")
     .select("id, host_id, guest_id, mode, status")
     .eq("host_id", hostId)
-    .in("status", ["pending", "accepted"]);
+    .in("status", ["pending", "accepted"])
+    .gt("created_at", tenMinAgo);
   const rows = (data as InviteRow[] | null) ?? [];
   return rows.map((r) => ({
     id: r.id,

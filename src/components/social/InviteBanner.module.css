@@ -61,6 +61,7 @@
   font-size: 1rem;
   font-weight: 600;
   transition: all 0.14s ease;
+  cursor: pointer;
 }
 
 .decline:hover {
@@ -78,6 +79,7 @@
   font-size: 1.25rem;
   letter-spacing: 0.04em;
   transition: filter 0.14s ease;
+  cursor: pointer;
 }
 
 .accept:hover {

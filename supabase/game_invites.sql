@@ -32,7 +32,8 @@ create policy "game_invites_insert_host" on public.game_invites
 
 -- L'invité passe à accepted/declined, l'hôte à cancelled
 create policy "game_invites_update_involved" on public.game_invites
-  for update using (auth.uid() = host_id or auth.uid() = guest_id);
+  for update using (auth.uid() = host_id or auth.uid() = guest_id)
+  with check (auth.uid() = host_id or auth.uid() = guest_id);
 
 create policy "game_invites_delete_involved" on public.game_invites
   for delete using (auth.uid() = host_id or auth.uid() = guest_id);

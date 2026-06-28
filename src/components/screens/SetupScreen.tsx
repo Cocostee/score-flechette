@@ -95,6 +95,7 @@ export function SetupScreen({ game }: SetupScreenProps) {
     });
 
   const addFriendSlot = async (friendUserId: string, label: string) => {
+    setInviteMsg(null);
     const isSelf = friendUserId === auth.user?.id;
     const canAdd =
       players.length < MAX_PLAYERS &&
@@ -138,15 +139,14 @@ export function SetupScreen({ game }: SetupScreenProps) {
     );
 
   const removePlayer = (id: string) => {
+    if (players.length <= MIN_PLAYERS) {
+      return;
+    }
     const target = players.find((player) => player.id === id);
     if (target?.friendUserId && target.friendUserId !== auth.user?.id) {
       void invites.cancelForGuest(target.friendUserId);
     }
-    setPlayers((list) =>
-      list.length <= MIN_PLAYERS
-        ? list
-        : list.filter((player) => player.id !== id),
-    );
+    setPlayers((list) => list.filter((player) => player.id !== id));
   };
 
   useEffect(() => {
