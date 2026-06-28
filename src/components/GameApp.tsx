@@ -5,10 +5,12 @@ import { useDartsGame } from "@/hooks/useDartsGame";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useGameRecorder } from "@/hooks/useGameRecorder";
+import { useIncomingInvites } from "@/hooks/useIncomingInvites";
 import { HomeScreen } from "@/components/screens/HomeScreen";
 import { SetupScreen } from "@/components/screens/SetupScreen";
 import { GameScreen } from "@/components/screens/GameScreen";
 import { ResultScreen } from "@/components/screens/ResultScreen";
+import { InviteBanner } from "@/components/social/InviteBanner";
 import styles from "./GameApp.module.css";
 
 /* Client shell: owns the game hook and routes between screens. */
@@ -17,6 +19,7 @@ export function GameApp() {
   const { user } = useAuth();
   useTheme();
   useGameRecorder(game, user?.id ?? null);
+  const incoming = useIncomingInvites(user?.id ?? null);
 
   useEffect(() => {
     if (
@@ -37,6 +40,13 @@ export function GameApp() {
         {screen === "game" && <GameScreen game={game} />}
         {screen === "result" && <ResultScreen game={game} />}
       </div>
+      {incoming.current && (
+        <InviteBanner
+          invite={incoming.current}
+          onAccept={incoming.accept}
+          onDecline={incoming.decline}
+        />
+      )}
     </div>
   );
 }
