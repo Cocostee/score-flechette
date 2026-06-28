@@ -304,3 +304,38 @@
   transform: translateY(-2px);
   filter: brightness(1.08);
 }
+
+.inviteStatus {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+.inviteStatus[data-status="pending"] {
+  color: var(--chalk-dim);
+  animation: invitePulse 1.3s ease-in-out infinite;
+}
+
+.inviteStatus[data-status="accepted"] {
+  color: var(--green);
+  font-weight: 700;
+}
+
+@keyframes invitePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.inviteMsg {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: var(--red);
+  text-align: center;
+}
+
+.launch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

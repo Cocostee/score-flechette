@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   Player,
   TrackedPlayer,
@@ -13,6 +13,7 @@ import { getMode, X01_START_SCORES } from "@/data/modes";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlayers } from "@/hooks/usePlayers";
 import { useSocial } from "@/hooks/useSocial";
+import { useGameInvites } from "@/hooks/useGameInvites";
 import { IconArrowLeft, IconUser, IconStar } from "@/components/ui/icons";
 import styles from "./SetupScreen.module.css";
 
@@ -61,9 +62,13 @@ export function SetupScreen({ game }: SetupScreenProps) {
   const auth = useAuth();
   const profiles = usePlayers(auth.user?.id ?? null);
   const social = useSocial(auth.user?.id ?? null);
+  const invites = useGameInvites(auth.user?.id ?? null);
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
   const [rules, setRules] = useState<X01Rules>(game.state.rules);
   const [legsTarget, setLegsTarget] = useState(1);
+  const [inviteMsg, setInviteMsg] = useState<string | null>(null);
+  const playersRef = useRef(players);
+  playersRef.current = players;
 
   const isX01 = mode === "x01";
 
@@ -89,14 +94,16 @@ export function SetupScreen({ game }: SetupScreenProps) {
       ];
     });
 
-  const addFriendSlot = (friendUserId: string, label: string) =>
+  const addFriendSlot = async (friendUserId: string, label: string) => {
+    const isSelf = friendUserId === auth.user?.id;
+    const canAdd =
+      players.length < MAX_PLAYERS &&
+      !players.some((player) => player.friendUserId === friendUserId);
+    if (!canAdd) {
+      return;
+    }
+    const newId = crypto.randomUUID();
     setPlayers((list) => {
-      if (
-        list.length >= MAX_PLAYERS ||
-        list.some((player) => player.friendUserId === friendUserId)
-      ) {
-        return list;
-      }
       const slot = list.find(
         (player) => !player.profileId && !player.friendUserId && !player.name.trim(),
       );
@@ -107,11 +114,18 @@ export function SetupScreen({ game }: SetupScreenProps) {
             : player,
         );
       }
-      return [
-        ...list,
-        { id: crypto.randomUUID(), name: label, friendUserId },
-      ];
+      return [...list, { id: newId, name: label, friendUserId }];
     });
+    if (!isSelf) {
+      const error = await invites.invite(friendUserId, mode);
+      if (error) {
+        setPlayers((list) =>
+          list.filter((player) => player.friendUserId !== friendUserId),
+        );
+        setInviteMsg(error);
+      }
+    }
+  };
 
   const rename = (id: string, name: string) =>
     setPlayers((list) =>
@@ -123,12 +137,44 @@ export function SetupScreen({ game }: SetupScreenProps) {
       list.length >= MAX_PLAYERS ? list : [...list, emptyPlayer()],
     );
 
-  const removePlayer = (id: string) =>
+  const removePlayer = (id: string) => {
+    const target = players.find((player) => player.id === id);
+    if (target?.friendUserId && target.friendUserId !== auth.user?.id) {
+      void invites.cancelForGuest(target.friendUserId);
+    }
     setPlayers((list) =>
       list.length <= MIN_PLAYERS
         ? list
         : list.filter((player) => player.id !== id),
     );
+  };
+
+  useEffect(() => {
+    const declinedIds = Object.entries(invites.invites)
+      .filter(([, entry]) => entry.status === "declined")
+      .map(([guestId]) => guestId);
+    if (declinedIds.length === 0) {
+      return;
+    }
+    const removed = playersRef.current.filter(
+      (player) =>
+        player.friendUserId && declinedIds.includes(player.friendUserId),
+    );
+    if (removed.length === 0) {
+      return;
+    }
+    setInviteMsg(`${removed[0].name} a refusé l'invitation`);
+    setPlayers((list) =>
+      list.filter(
+        (player) =>
+          !(player.friendUserId && declinedIds.includes(player.friendUserId)),
+      ),
+    );
+    for (const guestId of declinedIds) {
+      void invites.cancelForGuest(guestId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invites.invites]);
 
   const launch = () => {
     const named = players.map((player, index) => ({
@@ -144,7 +190,14 @@ export function SetupScreen({ game }: SetupScreenProps) {
   return (
     <div className={styles.screen}>
       <header className={styles.top}>
-        <button type="button" className={styles.back} onClick={game.goHome}>
+        <button
+          type="button"
+          className={styles.back}
+          onClick={async () => {
+            await invites.cancelAll();
+            game.goHome();
+          }}
+        >
           <IconArrowLeft /> Retour
         </button>
         <div className={styles.modeTag}>
@@ -177,6 +230,16 @@ export function SetupScreen({ game }: SetupScreenProps) {
                 readOnly={!!player.profileId || !!player.friendUserId}
                 onChange={(event) => rename(player.id, event.target.value)}
               />
+              {player.friendUserId && player.friendUserId !== auth.user?.id && (
+                <span
+                  className={styles.inviteStatus}
+                  data-status={invites.invites[player.friendUserId]?.status ?? "pending"}
+                >
+                  {invites.invites[player.friendUserId]?.status === "accepted"
+                    ? "✓"
+                    : "en attente…"}
+                </span>
+              )}
               <button
                 type="button"
                 className={styles.remove}
@@ -189,6 +252,7 @@ export function SetupScreen({ game }: SetupScreenProps) {
             </div>
           ))}
         </div>
+        {inviteMsg && <p className={styles.inviteMsg}>{inviteMsg}</p>}
         <button
           type="button"
           className={styles.add}
@@ -348,8 +412,13 @@ export function SetupScreen({ game }: SetupScreenProps) {
         </div>
       </section>
 
-      <button type="button" className={styles.launch} onClick={launch}>
-        Lancer la partie
+      <button
+        type="button"
+        className={styles.launch}
+        disabled={invites.hasPending}
+        onClick={launch}
+      >
+        {invites.hasPending ? "En attente d'acceptation…" : "Lancer la partie"}
       </button>
     </div>
   );
