@@ -260,3 +260,29 @@
   color: var(--chalk-faint);
   text-align: center;
 }
+
+.teamMembers {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.teamMemberStat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.teamMemberName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--chalk);
+}
+
+.teamMemberVals {
+  font-size: 0.76rem;
+  color: var(--chalk-dim);
+}

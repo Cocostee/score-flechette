@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Player } from "@/interfaces";
+import type { Player, Team } from "@/interfaces";
 import type { DartsGame } from "@/hooks/useDartsGame";
 import { getMode } from "@/data/modes";
 import { allClosed } from "@/utils/cricket";
@@ -40,6 +40,29 @@ function rankPlayers(game: DartsGame): Player[] {
   });
 
   return winner ? [winner, ...sorted] : sorted;
+}
+
+/* Orders teams from best to worst for the final podium. */
+function rankTeams(game: DartsGame): Team[] {
+  const { state } = game;
+  const teams = state.teams ?? [];
+  return [...teams].sort((a, b) => {
+    if (state.legsTarget > 1) {
+      return (state.legsWon[b.id] ?? 0) - (state.legsWon[a.id] ?? 0);
+    }
+    const sa = state.states[a.id];
+    const sb = state.states[b.id];
+    if (sa.kind === "x01" && sb.kind === "x01") {
+      return sa.score - sb.score;
+    }
+    if (sa.kind === "aroundclock" && sb.kind === "aroundclock") {
+      return atcProgress(sb) - atcProgress(sa);
+    }
+    if (sa.kind === "cricket" && sb.kind === "cricket") {
+      return state.mode === "cutthroat" ? sa.score - sb.score : sb.score - sa.score;
+    }
+    return 0;
+  });
 }
 
 const MEDALS = ["Or", "Argent", "Bronze"];
@@ -170,12 +193,70 @@ function PlayerResultCard({ player, game, rank }: PlayerResultCardProps) {
   );
 }
 
+interface TeamResultCardProps {
+  team: Team;
+  game: DartsGame;
+  rank: number;
+}
+
+function TeamResultCard({ team, game, rank }: TeamResultCardProps) {
+  const { state } = game;
+  const medal = MEDALS[rank - 1];
+  const isWinner = rank === 1;
+  const members = team.playerIds
+    .map((pid) => state.players.find((p) => p.id === pid))
+    .filter((p): p is Player => p != null);
+
+  const summary =
+    state.legsTarget > 1
+      ? `${state.legsWon[team.id] ?? 0} manche${(state.legsWon[team.id] ?? 0) > 1 ? "s" : ""}`
+      : (() => {
+          const ps = state.states[team.id];
+          if (ps.kind === "x01") return ps.score === 0 ? "Checkout !" : `${ps.score} restants`;
+          if (ps.kind === "aroundclock") return ps.target === 0 ? "Tour complet !" : `Cible ${ps.target}`;
+          return `${ps.score} pts`;
+        })();
+
+  return (
+    <div
+      className={styles.playerCard}
+      data-winner={isWinner ? "true" : "false"}
+      style={{ animationDelay: `${(rank - 1) * 0.08}s` }}
+    >
+      <div className={styles.playerCardHead}>
+        <span className={styles.playerMedal} data-medal={medal ?? "none"}>
+          {PLACE_LABELS[rank - 1] ?? `${rank}e`}
+        </span>
+        <span className={styles.playerCardName}>{team.name}</span>
+        <span className={styles.playerSummary}>{summary}</span>
+      </div>
+
+      <div className={styles.teamMembers}>
+        {members.map((member) => {
+          const pStats = state.totalStats[member.id];
+          const avg = computeAvg(game, member);
+          return (
+            <div key={member.id} className={styles.teamMemberStat}>
+              <span className={styles.teamMemberName}>{member.name}</span>
+              <span className={styles.teamMemberVals}>
+                {avg.toFixed(1)} moy · {pStats?.bestVisit || "—"} best · {pStats?.darts ?? 0} fléch.
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* End screen: podium, per-player stats, replay and home actions. */
 export function ResultScreen({ game }: ResultScreenProps) {
   const { state } = game;
   const info = getMode(state.mode);
   const ranking = rankPlayers(game);
   const winner = ranking[0];
+  const teamRanking = state.teams ? rankTeams(game) : null;
+  const winnerName = teamRanking ? teamRanking[0]?.name : ranking[0]?.name;
   const multiLeg = state.legsTarget > 1;
   const [copied, setCopied] = useState(false);
 
@@ -218,21 +299,30 @@ export function ResultScreen({ game }: ResultScreenProps) {
           {info.name}
           {multiLeg ? ` · ${state.legsTarget} manches` : ""}
         </p>
-        <h1 className={styles.winner}>{winner?.name}</h1>
+        <h1 className={styles.winner}>{winnerName}</h1>
         <p className={styles.winnerSub}>remporte la partie</p>
       </header>
 
       <section className={styles.breakdown}>
         <h2 className={styles.breakdownTitle}>Résultats</h2>
         <div className={styles.playerCards}>
-          {ranking.map((player, index) => (
-            <PlayerResultCard
-              key={player.id}
-              player={player}
-              game={game}
-              rank={index + 1}
-            />
-          ))}
+          {teamRanking
+            ? teamRanking.map((team, index) => (
+                <TeamResultCard
+                  key={team.id}
+                  team={team}
+                  game={game}
+                  rank={index + 1}
+                />
+              ))
+            : ranking.map((player, index) => (
+                <PlayerResultCard
+                  key={player.id}
+                  player={player}
+                  game={game}
+                  rank={index + 1}
+                />
+              ))}
         </div>
       </section>
 
