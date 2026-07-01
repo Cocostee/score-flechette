@@ -6,6 +6,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useGameRecorder } from "@/hooks/useGameRecorder";
 import { useIncomingInvites } from "@/hooks/useIncomingInvites";
+import { useLiveBroadcast } from "@/hooks/useLiveBroadcast";
+import { useLiveSpectator } from "@/hooks/useLiveSpectator";
+import { LiveBanner } from "@/components/spectator/LiveBanner";
+import { SpectatorScreen } from "@/components/spectator/SpectatorScreen";
 import { HomeScreen } from "@/components/screens/HomeScreen";
 import { SetupScreen } from "@/components/screens/SetupScreen";
 import { GameScreen } from "@/components/screens/GameScreen";
@@ -20,6 +24,8 @@ export function GameApp() {
   useTheme();
   useGameRecorder(game, user?.id ?? null);
   const incoming = useIncomingInvites(user?.id ?? null);
+  useLiveBroadcast(game, user?.id ?? null);
+  const spectate = useLiveSpectator(user?.id ?? null);
 
   useEffect(() => {
     if (
@@ -45,6 +51,19 @@ export function GameApp() {
           invite={incoming.current}
           onAccept={incoming.accept}
           onDecline={incoming.decline}
+        />
+      )}
+      {!incoming.current && spectate.available && !spectate.watching && (
+        <LiveBanner
+          hostUsername={spectate.available.hostUsername}
+          onWatch={spectate.watch}
+          onDismiss={spectate.dismiss}
+        />
+      )}
+      {spectate.watching && (
+        <SpectatorScreen
+          live={spectate.watching}
+          onClose={spectate.stopWatching}
         />
       )}
     </div>
