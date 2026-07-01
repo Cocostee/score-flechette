@@ -88,6 +88,11 @@ Nouveau hook `useLiveSpectator(userId)` monté globalement (comme
 - Une ligne devient pertinente pour la bannière si `status === 'live'` **et** que
   le spectateur est un **joueur** de cette partie
   (`state.players.some(p => p.friendUserId === userId)`).
+- **Fermeture automatique** : dès qu'il n'y a plus de partie en cours — la ligne
+  passe à `status = 'ended'`, disparaît, ou devient périmée — `available` repasse
+  à `null` et la **bannière se ferme toute seule** (aucune action du spectateur).
+  Si le spectateur était en train de regarder, `SpectatorScreen` bascule sur
+  « Partie terminée » (voir ci-dessous) puis se ferme.
 - Expose : `liveHost` (l'invite courante : id hôte, pseudo hôte, état),
   `watching` (bool), `watch()`, `stopWatching()`.
 
