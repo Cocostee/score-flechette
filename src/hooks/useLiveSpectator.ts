@@ -32,18 +32,26 @@ export function useLiveSpectator(userId: string | null): LiveSpectatorState {
     }
     const list = await listLiveForViewer(userId);
     // Ne garder que les parties où le spectateur est un joueur.
-    const relevant =
-      list.find((lg) =>
-        lg.state.players.some((p) => p.friendUserId === userId),
-      ) ?? null;
-    if (!relevant) {
-      // Plus de partie live → réinitialise un éventuel masquage.
+    const relevantList = list.filter((lg) =>
+      lg.state.players.some((p) => p.friendUserId === userId),
+    );
+    if (relevantList.length === 0) {
       dismissedHost.current = null;
       setAvailable(null);
       return;
     }
-    // Masquée manuellement pour cette partie précise → reste cachée.
-    setAvailable(relevant.hostId === dismissedHost.current ? null : relevant);
+    // Le masquage manuel tombe dès que la partie masquée n'est plus en cours,
+    // pour que la prochaine partie de cet hôte réapparaisse.
+    if (
+      dismissedHost.current &&
+      !relevantList.some((lg) => lg.hostId === dismissedHost.current)
+    ) {
+      dismissedHost.current = null;
+    }
+    // Afficher la première partie non masquée (gère plusieurs hôtes live).
+    const next =
+      relevantList.find((lg) => lg.hostId !== dismissedHost.current) ?? null;
+    setAvailable(next);
   }, [userId]);
 
   useEffect(() => {
