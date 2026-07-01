@@ -2,12 +2,20 @@ import type { GameState } from "@/interfaces";
 import { allClosed } from "@/utils/cricket";
 import { atcProgress } from "@/utils/aroundClock";
 
-/* Scores a player for ranking; higher is better in every mode. */
-function metric(state: GameState, playerId: string): number {
+/* The scoring sides of a game: team ids in team mode, player ids in solo. */
+function sideIds(state: GameState): string[] {
+  return state.teams ? state.teams.map((t) => t.id) : state.players.map((p) => p.id);
+}
+
+/* Scores a side for ranking; higher is better in every mode. */
+function metric(state: GameState, sideId: string): number {
   if (state.legsTarget > 1) {
-    return state.legsWon[playerId] ?? 0;
+    return state.legsWon[sideId] ?? 0;
   }
-  const ps = state.states[playerId];
+  const ps = state.states[sideId];
+  if (!ps) {
+    return 0;
+  }
   if (ps.kind === "x01") {
     return -ps.score;
   }
@@ -20,20 +28,17 @@ function metric(state: GameState, playerId: string): number {
     : closedBonus + ps.score;
 }
 
-/* Returns each player's live 1-based rank, sharing ties. */
+/* Returns each side's live 1-based rank, sharing ties. Keyed by sideId. */
 export function liveRanks(state: GameState): Record<string, number> {
-  const ordered = [...state.players].sort(
-    (a, b) => metric(state, b.id) - metric(state, a.id),
+  const ordered = [...sideIds(state)].sort(
+    (a, b) => metric(state, b) - metric(state, a),
   );
   const ranks: Record<string, number> = {};
-  ordered.forEach((player, index) => {
-    if (
-      index > 0 &&
-      metric(state, player.id) === metric(state, ordered[index - 1].id)
-    ) {
-      ranks[player.id] = ranks[ordered[index - 1].id];
+  ordered.forEach((sideId, index) => {
+    if (index > 0 && metric(state, sideId) === metric(state, ordered[index - 1])) {
+      ranks[sideId] = ranks[ordered[index - 1]];
     } else {
-      ranks[player.id] = index + 1;
+      ranks[sideId] = index + 1;
     }
   });
   return ranks;
