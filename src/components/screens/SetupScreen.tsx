@@ -220,13 +220,16 @@ export function SetupScreen({ game }: SetupScreenProps) {
       list.map((t) => (t.id === teamId ? { ...t, name } : t)),
     );
 
-  const addEmptyTeam = () =>
+  const addEmptyTeam = () => {
+    if (teams.length >= MAX_TEAMS) {
+      return;
+    }
+    const p: Player = { id: crypto.randomUUID(), name: "" };
+    setPlayers((ps) => [...ps, p]);
     setTeams((list) => {
       if (list.length >= MAX_TEAMS) {
         return list;
       }
-      const p: Player = { id: crypto.randomUUID(), name: "" };
-      setPlayers((ps) => [...ps, p]);
       return [
         ...list,
         {
@@ -237,40 +240,38 @@ export function SetupScreen({ game }: SetupScreenProps) {
         },
       ];
     });
+  };
 
-  const removeTeam = (teamId: string) =>
-    setTeams((list) => {
-      if (list.length <= 2) {
-        return list;
+  const removeTeam = (teamId: string) => {
+    if (teams.length <= 2) {
+      return;
+    }
+    const team = teams.find((t) => t.id === teamId);
+    if (!team) {
+      return;
+    }
+    for (const pid of team.playerIds) {
+      const member = players.find((p) => p.id === pid);
+      if (member?.friendUserId && member.friendUserId !== auth.user?.id) {
+        void invites.cancelForGuest(member.friendUserId);
       }
-      const team = list.find((t) => t.id === teamId);
-      if (team) {
-        for (const pid of team.playerIds) {
-          const member = players.find((p) => p.id === pid);
-          if (member?.friendUserId && member.friendUserId !== auth.user?.id) {
-            void invites.cancelForGuest(member.friendUserId);
-          }
-        }
-        setPlayers((ps) => ps.filter((p) => !team.playerIds.includes(p.id)));
-      }
-      return list.filter((t) => t.id !== teamId);
-    });
+    }
+    setPlayers((ps) => ps.filter((p) => !team.playerIds.includes(p.id)));
+    setTeams((list) => list.filter((t) => t.id !== teamId));
+  };
 
-  const addTeamSlot = (teamId: string) =>
+  const addTeamSlot = (teamId: string) => {
+    if (players.length >= MAX_PLAYERS) {
+      return;
+    }
+    const p: Player = { id: crypto.randomUUID(), name: "" };
+    setPlayers((ps) => [...ps, p]);
     setTeams((list) =>
-      list.map((t) => {
-        if (t.id !== teamId) {
-          return t;
-        }
-        const totalPlayers = list.reduce((n, x) => n + x.playerIds.length, 0);
-        if (totalPlayers >= MAX_PLAYERS) {
-          return t;
-        }
-        const p: Player = { id: crypto.randomUUID(), name: "" };
-        setPlayers((ps) => [...ps, p]);
-        return { ...t, playerIds: [...t.playerIds, p.id] };
-      }),
+      list.map((t) =>
+        t.id === teamId ? { ...t, playerIds: [...t.playerIds, p.id] } : t,
+      ),
     );
+  };
 
   const removeTeamSlot = (teamId: string, playerId: string) => {
     const member = players.find((p) => p.id === playerId);
@@ -661,6 +662,21 @@ export function SetupScreen({ game }: SetupScreenProps) {
 
                   {auth.user && (
                     <div className={styles.teamPickers}>
+                      <button
+                        type="button"
+                        className={styles.friendChip}
+                        disabled={players.some(
+                          (p) => p.friendUserId === auth.user?.id,
+                        )}
+                        onClick={() =>
+                          fillTeamSlot(team.id, {
+                            name: social.username ? `@${social.username}` : "Moi",
+                            friendUserId: auth.user!.id,
+                          })
+                        }
+                      >
+                        <IconUser /> Moi
+                      </button>
                       {profiles.players.map((profile) => (
                         <button
                           key={profile.id}
