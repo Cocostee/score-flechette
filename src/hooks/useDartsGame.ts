@@ -478,7 +478,7 @@ function reducer(state: GameState, action: Action): GameState {
           pointsScored: ending.pointsScored + (isX01Visit ? visit : 0),
         },
       };
-      const currentIndex = (state.currentIndex + 1) % state.order.length;
+      const currentIndex = (state.currentIndex + 1) % (state.order.length || 1);
       const round =
         currentIndex === state.startIndex ? state.round + 1 : state.round;
       return withHistory(state, {
@@ -501,7 +501,7 @@ function reducer(state: GameState, action: Action): GameState {
     case "NEXT_LEG": {
       const newTotalStats = accumulateAllStats(state);
       const sides = setupSides(state.players, state.teams);
-      const startIndex = (state.startIndex + 1) % state.order.length;
+      const startIndex = (state.startIndex + 1) % (state.order.length || 1);
       const states = buildStates(state.mode, state.rules, sides.sideIds);
       return {
         ...state,
