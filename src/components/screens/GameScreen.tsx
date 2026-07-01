@@ -16,6 +16,7 @@ import { feedback } from "@/utils/feedback";
 import { speak } from "@/utils/announcer";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { PlayerScoreCard } from "@/components/ui/PlayerScoreCard";
+import { TeamScoreCard } from "@/components/ui/TeamScoreCard";
 import { DartPad } from "@/components/ui/DartPad";
 import { DartBoard } from "@/components/ui/DartBoard";
 import { Confetti } from "@/components/ui/Confetti";
@@ -191,23 +192,50 @@ export function GameScreen({ game }: GameScreenProps) {
 
       <div
         className={styles.board}
-        data-many={state.players.length > 2 ? "true" : "false"}
+        data-many={
+          (state.teams ? state.teams.length : state.players.length) > 2
+            ? "true"
+            : "false"
+        }
       >
-        {state.players.map((player, index) => (
-          <PlayerScoreCard
-            key={player.id}
-            player={player}
-            state={state.states[player.id]}
-            stats={state.stats[player.id]}
-            legsWon={state.legsWon[player.id] ?? 0}
-            showLegs={state.legsTarget > 1}
-            startScore={state.rules.startScore}
-            rank={ranks[player.id]}
-            showRank={state.players.length > 1}
-            isCurrent={index === state.currentIndex && !state.winnerId}
-            isWinner={state.winnerId === player.id}
-          />
-        ))}
+        {state.teams
+          ? state.teams.map((team) => (
+              <TeamScoreCard
+                key={team.id}
+                team={team}
+                state={state.states[team.id]}
+                members={team.playerIds
+                  .map((pid) => state.players.find((p) => p.id === pid))
+                  .filter((p): p is NonNullable<typeof p> => p != null)}
+                stats={state.stats}
+                legsWon={state.legsWon[team.id] ?? 0}
+                showLegs={state.legsTarget > 1}
+                rank={ranks[team.id]}
+                showRank={state.teams!.length > 1}
+                isCurrentTeam={
+                  currentPlayer != null &&
+                  state.sideOf[currentPlayer.id] === team.id &&
+                  !state.winnerId
+                }
+                currentPlayerId={currentPlayer?.id ?? null}
+                isWinner={state.winnerId === team.id}
+              />
+            ))
+          : state.players.map((player, index) => (
+              <PlayerScoreCard
+                key={player.id}
+                player={player}
+                state={state.states[player.id]}
+                stats={state.stats[player.id]}
+                legsWon={state.legsWon[player.id] ?? 0}
+                showLegs={state.legsTarget > 1}
+                startScore={state.rules.startScore}
+                rank={ranks[player.id]}
+                showRank={state.players.length > 1}
+                isCurrent={index === state.currentIndex && !state.winnerId}
+                isWinner={state.winnerId === player.id}
+              />
+            ))}
       </div>
 
       <section className={styles.turn}>
