@@ -1,0 +1,192 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  overflow-y: auto;
+  background-color: var(--bg);
+  background-image: radial-gradient(
+    900px 600px at 50% -10%,
+    rgba(201, 164, 74, 0.1),
+    transparent 60%
+  );
+  padding: clamp(14px, 3vh, 24px) clamp(12px, 4vw, 20px) 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: rise 0.25s ease both;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.liveTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--red);
+  color: var(--red);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: livePulse 1.4s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.hostInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.hostName {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--chalk);
+}
+
+.modeName {
+  font-size: 0.72rem;
+  color: var(--chalk-dim);
+}
+
+.close {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--chalk);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.endedBanner {
+  padding: 12px;
+  text-align: center;
+  border-radius: var(--radius);
+  border: 1px solid var(--gold);
+  background: rgba(201, 164, 74, 0.12);
+  color: var(--gold-bright);
+  font-family: var(--font-display), serif;
+  font-size: 1.3rem;
+  letter-spacing: 0.04em;
+}
+
+.board {
+  display: flex;
+  gap: 10px;
+}
+
+.board[data-many="true"] {
+  flex-wrap: wrap;
+}
+
+.board[data-many="true"] > * {
+  flex: 1 1 calc(50% - 5px);
+}
+
+.turn {
+  background: linear-gradient(180deg, var(--surface), var(--bg-deep));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.turnHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.turnPlayer {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--chalk);
+}
+
+.turnRound {
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.turnTotal {
+  font-size: 0.84rem;
+  color: var(--gold-bright);
+  font-family: var(--font-display), serif;
+}
+
+.slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 12px 6px;
+  border-radius: 10px;
+  border: 1px dashed var(--line-strong);
+  background: var(--bg-deep);
+}
+
+.slot[data-filled="true"] {
+  border-style: solid;
+  border-color: var(--gold);
+  background: rgba(201, 164, 74, 0.08);
+  animation: popIn 0.2s ease both;
+}
+
+.slotLabel {
+  font-family: var(--font-display), serif;
+  font-size: 1.5rem;
+  color: var(--chalk);
+}
+
+.slotSub {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--chalk-faint);
+}
+
+.bust {
+  margin-top: 10px;
+  padding: 8px;
+  text-align: center;
+  border-radius: 10px;
+  font-family: var(--font-display), serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  color: #fff;
+  background: linear-gradient(180deg, var(--red), var(--red-deep));
+}
