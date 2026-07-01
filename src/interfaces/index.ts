@@ -27,6 +27,13 @@ export interface Player {
   friendUserId?: string;
 }
 
+export interface Team {
+  id: string;
+  name: string;
+  playerIds: string[];
+  color: string;
+}
+
 export interface X01PlayerState {
   kind: "x01";
   score: number;
@@ -63,6 +70,9 @@ export interface GameState {
   mode: GameMode;
   rules: X01Rules;
   players: Player[];
+  teams: Team[] | null;
+  sideOf: Record<string, string>;
+  order: string[];
   states: Record<string, PlayerGameState>;
   currentIndex: number;
   darts: DartThrow[];
@@ -84,6 +94,7 @@ export interface GameConfig {
   mode: GameMode;
   rules: X01Rules;
   players: Player[];
+  teams?: Team[];
   legsTarget: number;
 }
 
