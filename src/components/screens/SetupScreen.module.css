@@ -339,3 +339,165 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.modeToggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 5px;
+  margin-bottom: 12px;
+  border-radius: 13px;
+  border: 1px solid var(--line);
+  background: var(--bg-deep);
+}
+
+.modeToggleBtn {
+  padding: 10px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--chalk-dim);
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.16s ease;
+}
+
+.modeToggleBtn[data-on="true"] {
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  color: var(--chalk);
+  box-shadow: 0 2px 10px -4px rgba(0, 0, 0, 0.6);
+}
+
+.teamsArea {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.presets {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.presetLabel {
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--chalk-faint);
+}
+
+.presetBtn {
+  padding: 9px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--chalk);
+  font-family: var(--font-display), serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  transition: all 0.14s ease;
+}
+
+.presetBtn:hover:not(:disabled) {
+  border-color: var(--gold);
+  color: var(--gold-bright);
+}
+
+.presetBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.teamCards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.teamCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--team-accent, var(--gold));
+  background: linear-gradient(180deg, var(--surface), var(--bg-deep));
+}
+
+.teamCard[data-color="teamA"] { --team-accent: var(--gold); }
+.teamCard[data-color="teamB"] { --team-accent: #4c9be8; }
+.teamCard[data-color="teamC"] { --team-accent: #56c583; }
+
+.teamCardHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.teamName {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--bg-deep);
+  color: var(--chalk);
+  font-family: var(--font-display), serif;
+  font-size: 1.15rem;
+  letter-spacing: 0.03em;
+}
+
+.teamName:focus {
+  border-color: var(--line-strong);
+  outline: none;
+}
+
+.teamRemove {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg-deep);
+  color: var(--chalk-dim);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.teamMembers {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.teamMemberRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.teamAddSlot {
+  padding: 8px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--chalk-dim);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.teamAddSlot:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.teamPickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
