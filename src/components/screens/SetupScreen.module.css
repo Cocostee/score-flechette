@@ -410,13 +410,37 @@
   cursor: not-allowed;
 }
 
+.swipeHint {
+  margin: -2px 0 0;
+  text-align: center;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: var(--chalk-faint);
+}
+
 .teamCards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
+  scroll-padding: 0 2px;
+}
+
+.teamCards::-webkit-scrollbar {
+  height: 6px;
+}
+
+.teamCards::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 999px;
 }
 
 .teamCard {
+  flex: 0 0 86%;
+  max-width: 340px;
+  scroll-snap-align: center;
   display: flex;
   flex-direction: column;
   gap: 10px;

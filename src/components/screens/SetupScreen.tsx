@@ -580,6 +580,9 @@ export function SetupScreen({ game }: SetupScreenProps) {
               </button>
             </div>
 
+            {teams.length > 1 && (
+              <p className={styles.swipeHint}>← glisse pour voir les équipes →</p>
+            )}
             <div className={styles.teamCards}>
               {teams.map((team, teamIndex) => (
                 <div
@@ -660,59 +663,75 @@ export function SetupScreen({ game }: SetupScreenProps) {
                     </button>
                   </div>
 
-                  {auth.user && (
-                    <div className={styles.teamPickers}>
-                      <button
-                        type="button"
-                        className={styles.friendChip}
-                        disabled={players.some(
-                          (p) => p.friendUserId === auth.user?.id,
-                        )}
-                        onClick={() =>
-                          fillTeamSlot(team.id, {
-                            name: social.username ? `@${social.username}` : "Moi",
-                            friendUserId: auth.user!.id,
-                          })
-                        }
-                      >
-                        <IconUser /> Moi
-                      </button>
-                      {profiles.players.map((profile) => (
-                        <button
-                          key={profile.id}
-                          type="button"
-                          className={styles.profileChip}
-                          disabled={players.some((p) => p.profileId === profile.id)}
-                          onClick={() =>
-                            fillTeamSlot(team.id, {
-                              name: profile.name,
-                              profileId: profile.id,
-                            })
-                          }
-                        >
-                          <IconStar /> {profile.name}
-                        </button>
-                      ))}
-                      {social.friends.map((friend) => (
-                        <button
-                          key={friend.friendshipId}
-                          type="button"
-                          className={styles.friendChip}
-                          disabled={players.some(
-                            (p) => p.friendUserId === friend.userId,
+                  {auth.user &&
+                    (() => {
+                      // A profile/friend already placed in ANY team is hidden
+                      // from every picker so it can't be picked twice.
+                      const meUsed = players.some(
+                        (p) => p.friendUserId === auth.user?.id,
+                      );
+                      const freeProfiles = profiles.players.filter(
+                        (profile) =>
+                          !players.some((p) => p.profileId === profile.id),
+                      );
+                      const freeFriends = social.friends.filter(
+                        (friend) =>
+                          !players.some((p) => p.friendUserId === friend.userId),
+                      );
+                      if (meUsed && freeProfiles.length === 0 && freeFriends.length === 0) {
+                        return null;
+                      }
+                      return (
+                        <div className={styles.teamPickers}>
+                          {!meUsed && (
+                            <button
+                              type="button"
+                              className={styles.friendChip}
+                              onClick={() =>
+                                fillTeamSlot(team.id, {
+                                  name: social.username
+                                    ? `@${social.username}`
+                                    : "Moi",
+                                  friendUserId: auth.user!.id,
+                                })
+                              }
+                            >
+                              <IconUser /> Moi
+                            </button>
                           )}
-                          onClick={() =>
-                            fillTeamSlot(team.id, {
-                              name: `@${friend.username}`,
-                              friendUserId: friend.userId,
-                            })
-                          }
-                        >
-                          <IconUser /> @{friend.username}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                          {freeProfiles.map((profile) => (
+                            <button
+                              key={profile.id}
+                              type="button"
+                              className={styles.profileChip}
+                              onClick={() =>
+                                fillTeamSlot(team.id, {
+                                  name: profile.name,
+                                  profileId: profile.id,
+                                })
+                              }
+                            >
+                              <IconStar /> {profile.name}
+                            </button>
+                          ))}
+                          {freeFriends.map((friend) => (
+                            <button
+                              key={friend.friendshipId}
+                              type="button"
+                              className={styles.friendChip}
+                              onClick={() =>
+                                fillTeamSlot(team.id, {
+                                  name: `@${friend.username}`,
+                                  friendUserId: friend.userId,
+                                })
+                              }
+                            >
+                              <IconUser /> @{friend.username}
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })()}
                 </div>
               ))}
             </div>
