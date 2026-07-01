@@ -10,6 +10,7 @@ import type {
 import type { DartsGame } from "@/hooks/useDartsGame";
 import { getMode } from "@/data/modes";
 import { deadNumbers, dartMarks } from "@/utils/cricket";
+import { sidesAsPlayers } from "@/utils/teams";
 import { suggestCheckouts } from "@/utils/checkout";
 import { liveRanks } from "@/utils/ranking";
 import { feedback } from "@/utils/feedback";
@@ -56,9 +57,18 @@ export function GameScreen({ game }: GameScreenProps) {
   const turnMarks = state.darts.reduce((sum, dart) => sum + dartMarks(dart), 0);
   const slots = [0, 1, 2];
 
+  const currentSideId = currentPlayer
+    ? state.sideOf[currentPlayer.id] ?? currentPlayer.id
+    : null;
+  const winnerName = state.winnerId
+    ? state.teams?.find((t) => t.id === state.winnerId)?.name ??
+      state.players.find((p) => p.id === state.winnerId)?.name ??
+      ""
+    : "";
+
   const activeX01 =
-    state.mode === "x01" && currentPlayer
-      ? (state.states[currentPlayer.id] as X01PlayerState)
+    state.mode === "x01" && currentPlayer && currentSideId
+      ? (state.states[currentSideId] as X01PlayerState)
       : null;
   const checkouts =
     activeX01 && activeX01.opened && !state.turnOver && !state.winnerId
@@ -66,8 +76,8 @@ export function GameScreen({ game }: GameScreenProps) {
       : [];
 
   const atcState =
-    isATC && currentPlayer
-      ? (state.states[currentPlayer.id] as AroundClockPlayerState)
+    isATC && currentPlayer && currentSideId
+      ? (state.states[currentSideId] as AroundClockPlayerState)
       : null;
   const atcTarget = atcState?.target ?? undefined;
 
@@ -97,7 +107,10 @@ export function GameScreen({ game }: GameScreenProps) {
     const prev = announced.current;
     const winner = state.winnerId ?? "";
     if (winner && winner !== prev.winner) {
-      const name = state.players.find((p) => p.id === winner)?.name ?? "";
+      const name =
+        state.teams?.find((t) => t.id === winner)?.name ??
+        state.players.find((p) => p.id === winner)?.name ??
+        "";
       speak(`${name}, partie terminée`, voice && !muted);
     } else if (state.bust && !prev.bust) {
       speak("Bust", voice && !muted);
@@ -137,12 +150,12 @@ export function GameScreen({ game }: GameScreenProps) {
   const ranks = liveRanks(state);
 
   const cricketOverlay =
-    isCricket && currentPlayer
+    isCricket && currentPlayer && currentSideId
       ? {
-          marks: (state.states[currentPlayer.id] as CricketPlayerState).marks,
+          marks: (state.states[currentSideId] as CricketPlayerState).marks,
           dead: deadNumbers(
             state.states as Record<string, CricketPlayerState>,
-            state.players,
+            sidesAsPlayers(state.teams, state.players),
           ),
         }
       : undefined;
@@ -241,7 +254,11 @@ export function GameScreen({ game }: GameScreenProps) {
       <section className={styles.turn}>
         <div className={styles.turnHead}>
           <span className={styles.turnPlayer}>
-            {currentPlayer ? currentPlayer.name : ""}
+            {currentPlayer
+              ? state.teams
+                ? `${state.teams.find((t) => t.id === currentSideId)?.name ?? ""} · ${currentPlayer.name}`
+                : currentPlayer.name
+              : ""}
             <span className={styles.turnRound}>Round {state.round}</span>
           </span>
           <span className={styles.turnTotal}>
@@ -367,7 +384,7 @@ export function GameScreen({ game }: GameScreenProps) {
               {matchOver ? "Match terminé" : "Manche gagnée"}
             </p>
             <h2 className={styles.victoryName}>
-              {state.players.find((p) => p.id === state.winnerId)?.name}
+              {winnerName}
             </h2>
             <p className={styles.victorySub}>
               {state.legsTarget > 1

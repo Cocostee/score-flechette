@@ -253,20 +253,28 @@ function TeamResultCard({ team, game, rank }: TeamResultCardProps) {
 export function ResultScreen({ game }: ResultScreenProps) {
   const { state } = game;
   const info = getMode(state.mode);
-  const ranking = rankPlayers(game);
-  const winner = ranking[0];
   const teamRanking = state.teams ? rankTeams(game) : null;
+  const ranking = teamRanking ? [] : rankPlayers(game);
   const winnerName = teamRanking ? teamRanking[0]?.name : ranking[0]?.name;
   const multiLeg = state.legsTarget > 1;
   const [copied, setCopied] = useState(false);
 
   const handleShare = async () => {
-    const lines = ranking.map((p, i) => {
-      const pStats = state.totalStats[p.id];
-      const avg = computeAvg(game, p);
-      const darts = pStats?.darts ?? 0;
-      return `${PLACE_LABELS[i] ?? `${i + 1}e`} ${p.name} — Moy/3: ${avg.toFixed(1)}, ${darts} fléch.`;
-    });
+    const lines = teamRanking
+      ? teamRanking.map((t, i) => {
+          const memberBits = t.playerIds
+            .map((pid) => state.players.find((p) => p.id === pid))
+            .filter((p): p is Player => p != null)
+            .map((m) => `${m.name} (${computeAvg(game, m).toFixed(1)})`)
+            .join(", ");
+          return `${PLACE_LABELS[i] ?? `${i + 1}e`} ${t.name} — ${memberBits}`;
+        })
+      : ranking.map((p, i) => {
+          const pStats = state.totalStats[p.id];
+          const avg = computeAvg(game, p);
+          const darts = pStats?.darts ?? 0;
+          return `${PLACE_LABELS[i] ?? `${i + 1}e`} ${p.name} — Moy/3: ${avg.toFixed(1)}, ${darts} fléch.`;
+        });
     const text = [
       `🎯 Sur la Ligne · ${info.name}`,
       multiLeg ? `${state.legsTarget} manches` : "",
