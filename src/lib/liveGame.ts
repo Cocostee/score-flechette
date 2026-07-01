@@ -85,15 +85,21 @@ export async function listLiveForViewer(viewerId: string): Promise<LiveGame[]> {
   }));
 }
 
-/* Écoute globale : toute modification d'une ligne live_games lisible (RLS)
-   déclenche onChange. Le hook re-fetch ensuite. */
-export function subscribeLiveForViewer(onChange: () => void): () => void {
+/* Écoute globale des changements live_games. Le payload est volontairement
+   ignoré : on ne fait que déclencher un re-fetch via listLiveForViewer, qui est
+   protégé par la RLS (REST). Donc même si Realtime notifiait une ligne non
+   lisible, aucune donnée ne fuite — au pire un re-fetch superflu. Le nom de
+   canal inclut le viewerId pour éviter toute collision multi-montage. */
+export function subscribeLiveForViewer(
+  viewerId: string,
+  onChange: () => void,
+): () => void {
   const supabase = getSupabase();
   if (!supabase) {
     return () => {};
   }
   const channel = supabase
-    .channel("live_games:viewer")
+    .channel(`live_games:viewer:${viewerId}`)
     .on(
       "postgres_changes",
       { event: "*", schema: "public", table: "live_games" },
