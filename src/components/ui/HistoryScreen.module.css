@@ -1,0 +1,146 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 78;
+  overflow-y: auto;
+  background-color: var(--bg);
+  background-image: radial-gradient(
+    900px 600px at 50% -10%,
+    rgba(201, 164, 74, 0.1),
+    transparent 60%
+  );
+  padding: clamp(14px, 3vh, 24px) clamp(12px, 4vw, 20px) 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: rise 0.25s ease both;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  font-family: var(--font-display), serif;
+  font-size: 1.8rem;
+  letter-spacing: 0.04em;
+  color: var(--chalk);
+}
+
+.close {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--chalk);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.empty {
+  text-align: center;
+  color: var(--chalk-dim);
+  padding: 40px 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--surface), var(--bg-deep));
+}
+
+.row[data-bust="true"] {
+  border-color: var(--red);
+}
+
+.round {
+  flex-shrink: 0;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  width: 30px;
+}
+
+.who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  width: 84px;
+  flex-shrink: 0;
+}
+
+.name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--chalk);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.team {
+  font-size: 0.62rem;
+  color: var(--chalk-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.darts {
+  flex: 1;
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.dart {
+  font-family: var(--font-display), serif;
+  font-size: 1rem;
+  color: var(--chalk);
+  padding: 2px 7px;
+  border-radius: 7px;
+  background: var(--bg-deep);
+  border: 1px solid var(--line);
+}
+
+.score {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: var(--chalk-dim);
+  width: 66px;
+  text-align: right;
+}
+
+.fix {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--gold-bright);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fix:hover {
+  border-color: var(--gold);
+}
