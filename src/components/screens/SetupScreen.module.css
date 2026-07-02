@@ -454,6 +454,11 @@
 .teamCard[data-color="teamA"] { --team-accent: var(--gold); }
 .teamCard[data-color="teamB"] { --team-accent: #4c9be8; }
 .teamCard[data-color="teamC"] { --team-accent: #56c583; }
+.teamCard[data-color="teamD"] { --team-accent: #e07b39; }
+.teamCard[data-color="teamE"] { --team-accent: #a071e0; }
+.teamCard[data-color="teamF"] { --team-accent: #e0568f; }
+.teamCard[data-color="teamG"] { --team-accent: #3fbfa8; }
+.teamCard[data-color="teamH"] { --team-accent: #c7b23f; }
 
 .teamCardHead {
   display: flex;

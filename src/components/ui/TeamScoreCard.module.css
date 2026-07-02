@@ -13,6 +13,11 @@
 .card[data-color="teamA"] { --team-accent: var(--gold); }
 .card[data-color="teamB"] { --team-accent: #4c9be8; }
 .card[data-color="teamC"] { --team-accent: #56c583; }
+.card[data-color="teamD"] { --team-accent: #e07b39; }
+.card[data-color="teamE"] { --team-accent: #a071e0; }
+.card[data-color="teamF"] { --team-accent: #e0568f; }
+.card[data-color="teamG"] { --team-accent: #3fbfa8; }
+.card[data-color="teamH"] { --team-accent: #c7b23f; }
 
 .card[data-current="true"] {
   box-shadow: 0 0 0 1px var(--team-accent), 0 10px 28px -16px rgba(0, 0, 0, 0.6);

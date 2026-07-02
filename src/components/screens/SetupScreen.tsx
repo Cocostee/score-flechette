@@ -23,7 +23,7 @@ interface SetupScreenProps {
   game: DartsGame;
 }
 
-const MAX_PLAYERS = 6;
+const MAX_PLAYERS = 16;
 const MIN_PLAYERS = 1;
 const NAMES_KEY = "oche:lastPlayers";
 const LEGS_OPTIONS = [1, 2, 3, 5];
@@ -32,8 +32,9 @@ const TEAM_PRESETS: { label: string; sizes: number[] }[] = [
   { label: "2v2", sizes: [2, 2] },
   { label: "3v3", sizes: [3, 3] },
   { label: "2v2v2", sizes: [2, 2, 2] },
+  { label: "2v2v2v2", sizes: [2, 2, 2, 2] },
 ];
-const MAX_TEAMS = 3;
+const MAX_TEAMS = 8;
 
 /* Creates a fresh empty player slot. */
 function emptyPlayer(): Player {

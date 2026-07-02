@@ -1,8 +1,17 @@
 import type { Player, Team } from "@/interfaces";
 
-export const TEAM_COLORS = ["teamA", "teamB", "teamC"] as const;
+export const TEAM_COLORS = [
+  "teamA",
+  "teamB",
+  "teamC",
+  "teamD",
+  "teamE",
+  "teamF",
+  "teamG",
+  "teamH",
+] as const;
 
-const TEAM_LETTERS = ["A", "B", "C"];
+const TEAM_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
 /* Default display label for the nth team. */
 export function teamLabel(index: number): string {

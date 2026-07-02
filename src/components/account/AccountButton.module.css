@@ -58,6 +58,9 @@
   position: relative;
   width: 100%;
   max-width: 420px;
+  max-height: calc(100dvh - 36px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: linear-gradient(180deg, var(--surface-2), var(--surface));
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-lg);
