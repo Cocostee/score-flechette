@@ -10,6 +10,7 @@ import type { Theme } from "@/hooks/useTheme";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { StatsScreen } from "@/components/stats/StatsScreen";
 import { FriendsScreen } from "@/components/account/FriendsScreen";
+import { ProfileScreen } from "@/components/account/ProfileScreen";
 import {
   IconUser,
   IconUsers,
@@ -47,6 +48,7 @@ export function AccountButton() {
   const [newName, setNewName] = useState("");
   const [showStats, setShowStats] = useState(false);
   const [showFriends, setShowFriends] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   if (!auth.configured) {
     return null;
@@ -230,6 +232,17 @@ export function AccountButton() {
                   className={styles.stats}
                   onClick={() => {
                     setOpen(false);
+                    setShowProfile(true);
+                  }}
+                >
+                  <IconUser /> Mon profil
+                </button>
+
+                <button
+                  type="button"
+                  className={styles.stats}
+                  onClick={() => {
+                    setOpen(false);
                     setShowFriends(true);
                   }}
                 >
@@ -308,6 +321,13 @@ export function AccountButton() {
           onClose={() => setShowStats(false)}
         />
       )}
+
+            {showProfile && auth.user && (
+              <ProfileScreen
+                userId={auth.user.id}
+                onClose={() => setShowProfile(false)}
+              />
+            )}
 
             {showFriends && auth.user && (
               <FriendsScreen
