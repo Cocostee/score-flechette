@@ -34,6 +34,15 @@ export interface Team {
   color: string;
 }
 
+export interface TurnRecord {
+  round: number;
+  playerId: string;
+  sideId: string;
+  darts: DartThrow[];
+  bust: boolean;
+  scoreAfter: number;
+}
+
 export interface X01PlayerState {
   kind: "x01";
   score: number;
@@ -81,6 +90,7 @@ export interface GameState {
   bust: boolean;
   winnerId: string | null;
   round: number;
+  history: TurnRecord[];
   stats: Record<string, PlayerStats>;
   totalStats: Record<string, PlayerStats>;
   legsTarget: number;

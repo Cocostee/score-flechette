@@ -13,6 +13,7 @@ import type {
   PlayerGameState,
   PlayerStats,
   Team,
+  TurnRecord,
   X01PlayerState,
   X01Rules,
 } from "@/interfaces";
@@ -39,6 +40,7 @@ type Action =
   | { type: "UNDO" }
   | { type: "REMOVE_FROM"; index: number }
   | { type: "NEXT_TURN" }
+  | { type: "ROLLBACK_TO_TURN"; index: number }
   | { type: "FINISH" }
   | { type: "NEXT_LEG" }
   | { type: "NEW_GAME" }
@@ -195,6 +197,18 @@ function replayTurn(
   return map;
 }
 
+/* Headline numeric value of a side's state, for a history row. */
+function sideScoreValue(
+  states: Record<string, PlayerGameState>,
+  sid: string,
+): number {
+  const ps = states[sid];
+  if (!ps) return 0;
+  if (ps.kind === "x01") return ps.score;
+  if (ps.kind === "aroundclock") return atcProgress(ps);
+  return ps.score;
+}
+
 /* Resolves a registered dart for the active player and returns the next state. */
 function reduceRegister(state: GameState, dart: DartThrow): GameState {
   if (state.turnOver || state.winnerId || state.darts.length >= 3) {
@@ -225,6 +239,19 @@ function reduceRegister(state: GameState, dart: DartThrow): GameState {
       legsWon: result.win
         ? { ...state.legsWon, [sid]: state.legsWon[sid] + 1 }
         : state.legsWon,
+      history: result.win
+        ? [
+            ...state.history,
+            {
+              round: state.round,
+              playerId: currentId,
+              sideId: sid,
+              darts: [...darts],
+              bust: false,
+              scoreAfter: atcProgress(result.state),
+            },
+          ]
+        : state.history,
     };
   }
 
@@ -288,6 +315,19 @@ function reduceRegister(state: GameState, dart: DartThrow): GameState {
       legsWon: result.win
         ? { ...state.legsWon, [sid]: state.legsWon[sid] + 1 }
         : state.legsWon,
+      history: result.win
+        ? [
+            ...state.history,
+            {
+              round: state.round,
+              playerId: currentId,
+              sideId: sid,
+              darts: [...darts],
+              bust: false,
+              scoreAfter: (result.state as X01PlayerState).score,
+            },
+          ]
+        : state.history,
     };
   }
 
@@ -313,6 +353,98 @@ function reduceRegister(state: GameState, dart: DartThrow): GameState {
     legsWon: win
       ? { ...state.legsWon, [sid]: state.legsWon[sid] + 1 }
       : state.legsWon,
+    history: win
+      ? [
+          ...state.history,
+          {
+            round: state.round,
+            playerId: currentId,
+            sideId: sid,
+            darts: [...darts],
+            bust: false,
+            scoreAfter: sideScoreValue(states, sid),
+          },
+        ]
+      : state.history,
+  };
+}
+
+/* Advances to the next turn: finalizes the ending player's visit stats,
+   records the completed turn into history, rotates the throwing order. Pure —
+   the caller wraps it with withHistory when appropriate. */
+function commitTurn(state: GameState): GameState {
+  const endingId = state.order[state.currentIndex];
+  const endSide = state.sideOf[endingId] ?? endingId;
+
+  const visit = (() => {
+    if (state.bust) return 0;
+    if (state.mode === "x01") {
+      return state.darts.reduce((sum, dart) => sum + dart.points, 0);
+    }
+    if (state.mode === "aroundclock") {
+      const snapState = state.turnSnapshot?.[endSide];
+      const currState = state.states[endSide];
+      if (
+        !snapState ||
+        snapState.kind !== "aroundclock" ||
+        currState.kind !== "aroundclock"
+      )
+        return 0;
+      if (currState.target === 0) {
+        return ATC_SEQUENCE.length - ATC_SEQUENCE.indexOf(snapState.target);
+      }
+      return Math.max(0, atcProgress(currState) - atcProgress(snapState));
+    }
+    return state.darts.reduce((sum, dart) => sum + dartMarks(dart), 0);
+  })();
+
+  const ending = state.stats[endingId];
+  const isX01Visit = state.mode === "x01" && !state.bust;
+
+  const snapState = state.turnSnapshot?.[endSide];
+  const isCheckoutAttempt =
+    state.mode === "x01" &&
+    snapState?.kind === "x01" &&
+    snapState.opened &&
+    snapState.score > 0 &&
+    snapState.score <= 170 &&
+    !state.winnerId;
+
+  const stats = {
+    ...state.stats,
+    [endingId]: {
+      ...ending,
+      bestVisit: Math.max(ending.bestVisit, visit),
+      lastVisit: visit,
+      tonPlus: ending.tonPlus + (isX01Visit && visit >= 100 ? 1 : 0),
+      oneEighties: ending.oneEighties + (isX01Visit && visit === 180 ? 1 : 0),
+      checkoutAttempts: ending.checkoutAttempts + (isCheckoutAttempt ? 1 : 0),
+      pointsScored: ending.pointsScored + (isX01Visit ? visit : 0),
+    },
+  };
+
+  const record: TurnRecord = {
+    round: state.round,
+    playerId: endingId,
+    sideId: endSide,
+    darts: [...state.darts],
+    bust: state.bust,
+    scoreAfter: sideScoreValue(state.states, endSide),
+  };
+
+  const currentIndex = (state.currentIndex + 1) % (state.order.length || 1);
+  const round =
+    currentIndex === state.startIndex ? state.round + 1 : state.round;
+  return {
+    ...state,
+    currentIndex,
+    round,
+    darts: [],
+    turnOver: false,
+    bust: false,
+    turnSnapshot: cloneStates(state.states),
+    stats,
+    history: [...state.history, record],
   };
 }
 
@@ -332,6 +464,7 @@ const DEFAULT_STATE: GameState = {
   bust: false,
   winnerId: null,
   round: 1,
+  history: [],
   stats: {},
   totalStats: {},
   legsTarget: 1,
@@ -375,6 +508,7 @@ function reducer(state: GameState, action: Action): GameState {
         bust: false,
         winnerId: null,
         round: 1,
+        history: [],
         stats: buildStats(action.config.players),
         totalStats: buildStats(action.config.players),
         legsTarget: action.config.legsTarget,
@@ -429,68 +563,36 @@ function reducer(state: GameState, action: Action): GameState {
       if (state.winnerId) {
         return state;
       }
-      const endingId = state.order[state.currentIndex];
-      const endSide = state.sideOf[endingId] ?? endingId;
+      return withHistory(state, commitTurn(state));
+    }
 
-      const visit = (() => {
-        if (state.bust) return 0;
-        if (state.mode === "x01") {
-          return state.darts.reduce((sum, dart) => sum + dart.points, 0);
-        }
-        if (state.mode === "aroundclock") {
-          const snapState = state.turnSnapshot?.[endSide];
-          const currState = state.states[endSide];
-          if (
-            !snapState ||
-            snapState.kind !== "aroundclock" ||
-            currState.kind !== "aroundclock"
-          )
-            return 0;
-          if (currState.target === 0) {
-            return ATC_SEQUENCE.length - ATC_SEQUENCE.indexOf(snapState.target);
-          }
-          return Math.max(0, atcProgress(currState) - atcProgress(snapState));
-        }
-        return state.darts.reduce((sum, dart) => sum + dartMarks(dart), 0);
-      })();
-
-      const ending = state.stats[endingId];
-      const isX01Visit = state.mode === "x01" && !state.bust;
-
-      const snapState = state.turnSnapshot?.[endSide];
-      const isCheckoutAttempt =
-        state.mode === "x01" &&
-        snapState?.kind === "x01" &&
-        snapState.opened &&
-        snapState.score > 0 &&
-        snapState.score <= 170 &&
-        !state.winnerId;
-
-      const stats = {
-        ...state.stats,
-        [endingId]: {
-          ...ending,
-          bestVisit: Math.max(ending.bestVisit, visit),
-          lastVisit: visit,
-          tonPlus: ending.tonPlus + (isX01Visit && visit >= 100 ? 1 : 0),
-          oneEighties: ending.oneEighties + (isX01Visit && visit === 180 ? 1 : 0),
-          checkoutAttempts: ending.checkoutAttempts + (isCheckoutAttempt ? 1 : 0),
-          pointsScored: ending.pointsScored + (isX01Visit ? visit : 0),
-        },
-      };
-      const currentIndex = (state.currentIndex + 1) % (state.order.length || 1);
-      const round =
-        currentIndex === state.startIndex ? state.round + 1 : state.round;
-      return withHistory(state, {
+    case "ROLLBACK_TO_TURN": {
+      if (action.index < 0 || action.index >= state.history.length) {
+        return state;
+      }
+      const sides = setupSides(state.players, state.teams);
+      const freshStates = buildStates(state.mode, state.rules, sides.sideIds);
+      let s: GameState = {
         ...state,
-        currentIndex,
-        round,
+        states: freshStates,
+        currentIndex: state.startIndex,
         darts: [],
+        turnSnapshot: cloneStates(freshStates),
         turnOver: false,
         bust: false,
-        turnSnapshot: cloneStates(state.states),
-        stats,
-      });
+        winnerId: null,
+        round: 1,
+        stats: buildStats(state.players),
+        history: [],
+        past: [],
+      };
+      for (const rec of state.history.slice(0, action.index)) {
+        for (const dart of rec.darts) {
+          s = reduceRegister(s, dart);
+        }
+        s = commitTurn(s);
+      }
+      return withHistory(state, s);
     }
 
     case "FINISH": {
@@ -514,6 +616,7 @@ function reducer(state: GameState, action: Action): GameState {
         bust: false,
         winnerId: null,
         round: 1,
+        history: [],
         stats: buildStats(state.players),
         totalStats: newTotalStats,
         past: [],
@@ -534,6 +637,7 @@ function reducer(state: GameState, action: Action): GameState {
         bust: false,
         winnerId: null,
         round: 1,
+        history: [],
         stats: buildStats(state.players),
         totalStats: buildStats(state.players),
         legsWon: buildLegs(sides.sideIds),
@@ -566,6 +670,7 @@ function reducer(state: GameState, action: Action): GameState {
         ...saved,
         past: saved.past ?? [],
         round: saved.round ?? 1,
+        history: saved.history ?? [],
         teams: saved.teams ?? null,
         sideOf:
           saved.sideOf ??
@@ -600,6 +705,7 @@ export interface DartsGame {
   newGame: () => void;
   goHome: () => void;
   markRecorded: () => void;
+  rollbackToTurn: (index: number) => void;
 }
 
 /* The single source of truth for game state, progression and scoring. */
@@ -660,6 +766,7 @@ export function useDartsGame(): DartsGame {
       newGame: () => dispatch({ type: "NEW_GAME" }),
       goHome: () => dispatch({ type: "GO_HOME" }),
       markRecorded: () => dispatch({ type: "MARK_RECORDED" }),
+      rollbackToTurn: (index) => dispatch({ type: "ROLLBACK_TO_TURN", index }),
     };
   }, [state]);
 }
