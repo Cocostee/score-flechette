@@ -118,7 +118,13 @@ export function GameScreen({ game }: GameScreenProps) {
     } else if (state.bust && !prev.bust) {
       speak("Bust", voice && !muted);
     } else if (state.turnOver && !prev.turnOver && !state.bust && !winner) {
-      speak(isCricket ? `${turnMarks} marques` : `${turnPoints}`, voice && !muted);
+      const allMisses =
+        state.darts.length > 0 && state.darts.every((d) => d.segment === 0);
+      if (allMisses) {
+        speak("T'es trop nul frère, ouvre les yeux", voice && !muted);
+      } else {
+        speak(isCricket ? `${turnMarks} marques` : `${turnPoints}`, voice && !muted);
+      }
     }
     announced.current = { turnOver: state.turnOver, bust: state.bust, winner };
   }, [
@@ -143,9 +149,15 @@ export function GameScreen({ game }: GameScreenProps) {
       feedback("bust", muted);
     } else if (state.darts.length > prev.darts) {
       feedback("throw", muted);
+      const last = state.darts[state.darts.length - 1];
+      if (last && last.segment === 20 && last.multiplier === 3) {
+        speak("T'es trop booster frérot", voice && !muted);
+      } else if (last && last.segment === 50) {
+        speak("Dans le mille", voice && !muted);
+      }
     }
     previous.current = { darts: state.darts.length, bust: state.bust, winner };
-  }, [state.darts.length, state.bust, state.winnerId, muted]);
+  }, [state.darts, state.darts.length, state.bust, state.winnerId, voice, muted]);
 
   const matchOver =
     state.winnerId !== null &&
