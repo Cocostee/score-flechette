@@ -1,13 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { createPortal } from "react-dom";
-import type { DartThrow } from "@/interfaces";
+import type { DartThrow, X01PlayerState } from "@/interfaces";
 import type { LiveGame } from "@/lib/liveGame";
 import { getMode } from "@/data/modes";
 import { dartMarks } from "@/utils/cricket";
 import { liveRanks } from "@/utils/ranking";
+import { suggestCheckouts } from "@/utils/checkout";
 import { PlayerScoreCard } from "@/components/ui/PlayerScoreCard";
 import { TeamScoreCard } from "@/components/ui/TeamScoreCard";
+import { HistoryScreen } from "@/components/ui/HistoryScreen";
+import { IconHistory } from "@/components/ui/icons";
 import styles from "./SpectatorScreen.module.css";
 
 interface SpectatorScreenProps {
@@ -30,6 +34,7 @@ export function SpectatorScreen({ live, onClose }: SpectatorScreenProps) {
     return null;
   }
   const state = live.state;
+  const [showHistory, setShowHistory] = useState(false);
   const info = getMode(state.mode);
   const isCricket = state.mode === "cricket" || state.mode === "cutthroat";
   const isATC = state.mode === "aroundclock";
@@ -44,6 +49,18 @@ export function SpectatorScreen({ live, onClose }: SpectatorScreenProps) {
   const currentSideId = currentPlayer
     ? state.sideOf[currentPlayer.id] ?? currentPlayer.id
     : null;
+  const activeX01 =
+    state.mode === "x01" && currentPlayer && currentSideId
+      ? (state.states[currentSideId] as X01PlayerState)
+      : null;
+  const checkouts =
+    activeX01 && activeX01.opened && !state.winnerId && !ended
+      ? suggestCheckouts(
+          activeX01.score,
+          3 - state.darts.length,
+          state.rules.outOption,
+        )
+      : [];
   const turnPoints = state.darts.reduce((sum, d) => sum + d.points, 0);
   const turnMarks = state.darts.reduce((sum, d) => sum + dartMarks(d), 0);
   const slots = [0, 1, 2];
@@ -65,6 +82,14 @@ export function SpectatorScreen({ live, onClose }: SpectatorScreenProps) {
           <span className={styles.hostName}>@{live.hostUsername}</span>
           <span className={styles.modeName}>{info.name}</span>
         </div>
+        <button
+          type="button"
+          className={styles.close}
+          onClick={() => setShowHistory(true)}
+          aria-label="Historique de la partie"
+        >
+          <IconHistory />
+        </button>
         <button
           type="button"
           className={styles.close}
@@ -170,8 +195,31 @@ export function SpectatorScreen({ live, onClose }: SpectatorScreenProps) {
               );
             })}
           </div>
+          {checkouts.length > 0 && (
+            <div className={styles.checkout}>
+              <span className={styles.checkoutLabel}>Sortie</span>
+              <div className={styles.checkoutList}>
+                {checkouts.map((combo, i) => (
+                  <span
+                    key={i}
+                    className={styles.checkoutCombo}
+                    data-alt={i > 0 ? "true" : undefined}
+                  >
+                    {combo.join(" · ")}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           {state.bust && <div className={styles.bust}>Bust</div>}
         </section>
+      )}
+      {showHistory && (
+        <HistoryScreen
+          state={state}
+          canEdit={false}
+          onClose={() => setShowHistory(false)}
+        />
       )}
     </div>,
     document.body,

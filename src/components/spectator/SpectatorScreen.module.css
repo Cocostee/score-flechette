@@ -190,3 +190,44 @@
   color: #fff;
   background: linear-gradient(180deg, var(--red), var(--red-deep));
 }
+
+.checkout {
+  margin-top: 10px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--green);
+  background: rgba(42, 161, 94, 0.1);
+}
+
+.checkoutLabel {
+  flex-shrink: 0;
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--green);
+  padding-top: 5px;
+}
+
+.checkoutList {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.checkoutCombo {
+  font-family: var(--font-display), serif;
+  font-size: 1.3rem;
+  letter-spacing: 0.05em;
+  color: var(--chalk);
+}
+
+.checkoutCombo[data-alt="true"] {
+  font-size: 1rem;
+  color: var(--chalk-dim);
+  opacity: 0.7;
+}
