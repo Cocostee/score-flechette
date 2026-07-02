@@ -108,7 +108,10 @@ export function ProfileScreen({ userId, onClose }: ProfileScreenProps) {
           type="file"
           accept="image/*"
           hidden
-          onChange={(event) => onPickAvatar(event.target.files?.[0])}
+          onChange={(event) => {
+            void onPickAvatar(event.target.files?.[0]);
+            event.target.value = "";
+          }}
         />
       </div>
 
