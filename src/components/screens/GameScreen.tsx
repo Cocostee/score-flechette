@@ -22,6 +22,7 @@ import { DartPad } from "@/components/ui/DartPad";
 import { DartBoard } from "@/components/ui/DartBoard";
 import { Confetti } from "@/components/ui/Confetti";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { HistoryScreen } from "@/components/ui/HistoryScreen";
 import {
   IconHome,
   IconVolumeOn,
@@ -29,6 +30,7 @@ import {
   IconUndo,
   IconTarget,
   IconGrid,
+  IconHistory,
 } from "@/components/ui/icons";
 import styles from "./GameScreen.module.css";
 
@@ -87,6 +89,7 @@ export function GameScreen({ game }: GameScreenProps) {
   );
   const inputDisabled = state.turnOver || state.winnerId !== null;
   const [confirmQuit, setConfirmQuit] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     window.history.pushState(null, "");
@@ -165,6 +168,12 @@ export function GameScreen({ game }: GameScreenProps) {
     return atcTarget === 25 ? "Cible : Bull" : `Cible : ${atcTarget}`;
   })();
 
+  const nextPlayerName = (() => {
+    if (state.order.length === 0) return "";
+    const nextId = state.order[(state.currentIndex + 1) % state.order.length];
+    return state.players.find((p) => p.id === nextId)?.name ?? "";
+  })();
+
   return (
     <div className={styles.screen}>
       <header className={styles.top}>
@@ -184,6 +193,14 @@ export function GameScreen({ game }: GameScreenProps) {
               : info.tagline}
           </span>
         </div>
+        <button
+          type="button"
+          className={styles.icon}
+          onClick={() => setShowHistory(true)}
+          aria-label="Historique de la partie"
+        >
+          <IconHistory />
+        </button>
         <button
           type="button"
           className={styles.icon}
@@ -372,7 +389,11 @@ export function GameScreen({ game }: GameScreenProps) {
           onClick={game.nextTurn}
           disabled={state.winnerId !== null}
         >
-          {state.turnOver ? "Joueur suivant →" : "Passer le tour"}
+          {state.turnOver
+            ? nextPlayerName
+              ? `→ ${nextPlayerName}`
+              : "Joueur suivant →"
+            : "Passer le tour"}
         </button>
       </div>
 
@@ -410,6 +431,15 @@ export function GameScreen({ game }: GameScreenProps) {
           cancelLabel="Continuer"
           onConfirm={game.goHome}
           onCancel={() => setConfirmQuit(false)}
+        />
+      )}
+
+      {showHistory && (
+        <HistoryScreen
+          state={state}
+          canEdit
+          onClose={() => setShowHistory(false)}
+          onRollback={game.rollbackToTurn}
         />
       )}
     </div>
